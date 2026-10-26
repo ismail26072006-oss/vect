@@ -31,11 +31,14 @@ export interface CourseSchedule {
 
 export type TaskPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 
+export type TaskCategory = 'Study' | 'Work' | 'Personal' | 'Organization';
+
 export interface TaskItem {
   id: string;
   title: string;
   description: string;
   courseName: string;
+  category?: TaskCategory;
   dueDate: string;
   dueTime: string;
   priority: TaskPriority;

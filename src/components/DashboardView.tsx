@@ -5,6 +5,7 @@ import {
   TaskItem, 
   DashboardTab, 
   TaskPriority,
+  TaskCategory,
   UserRole 
 } from '../types';
 import { 
@@ -26,8 +27,63 @@ import {
   ChevronRight,
   Broadcast,
   Share2,
-  Check
+  Check,
+  Tag,
+  X
 } from 'lucide-react';
+import { TaskStats } from './TaskStats';
+import { CalendarView } from './CalendarView';
+
+export const CATEGORY_CONFIG: Record<TaskCategory, { label: string; bg: string; text: string; border: string; icon: string }> = {
+  Study: {
+    label: 'Study',
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+    icon: '📚'
+  },
+  Work: {
+    label: 'Work',
+    bg: 'bg-amber-50',
+    text: 'text-amber-800',
+    border: 'border-amber-200',
+    icon: '💼'
+  },
+  Personal: {
+    label: 'Personal',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
+    border: 'border-emerald-200',
+    icon: '👤'
+  },
+  Organization: {
+    label: 'Organization',
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+    icon: '🏛️'
+  }
+};
+
+export const CategoryTag: React.FC<{ category?: TaskCategory | string; size?: 'sm' | 'xs' }> = ({ category, size = 'xs' }) => {
+  if (!category) return null;
+  const config = CATEGORY_CONFIG[category as TaskCategory] || {
+    label: category,
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    border: 'border-gray-200',
+    icon: '🏷️'
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-md border ${config.bg} ${config.text} ${config.border} ${
+      size === 'sm' ? 'text-[11px] px-2 py-0.5' : 'text-[10px] px-1.5 py-0.5'
+    }`}>
+      <span className="text-[11px] leading-none">{config.icon}</span>
+      <span>{config.label}</span>
+    </span>
+  );
+};
 
 interface DashboardViewProps {
   user: UserProfile;
@@ -59,6 +115,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Task Filter states
   const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed' | 'class'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [taskSearch, setTaskSearch] = useState('');
 
   // Calendar states
@@ -74,10 +131,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskCourse, setTaskCourse] = useState('');
+  const [taskCategory, setTaskCategory] = useState<TaskCategory>('Study');
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskDueTime, setTaskDueTime] = useState('23:59');
   const [taskPriority, setTaskPriority] = useState<TaskPriority>('MEDIUM');
   const [taskIsClass, setTaskIsClass] = useState(true);
+
+  // Animation feedback state for completed toggle
+  const [justToggledId, setJustToggledId] = useState<string | null>(null);
+
+  const handleAnimatedToggle = (id: string) => {
+    setJustToggledId(id);
+    onToggleTask(id);
+    setTimeout(() => {
+      setJustToggledId((prev) => (prev === id ? null : prev));
+    }, 600);
+  };
 
   // Form states for Schedule
   const [schedCourseName, setSchedCourseName] = useState('');
@@ -104,6 +173,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     setTaskTitle('');
     setTaskDescription('');
     setTaskCourse(schedules[0]?.courseName || 'Mata Kuliah Umum');
+    setTaskCategory('Study');
     setTaskDueDate(new Date().toISOString().split('T')[0]);
     setTaskDueTime('23:59');
     setTaskPriority('MEDIUM');
@@ -117,6 +187,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     setTaskTitle(task.title);
     setTaskDescription(task.description);
     setTaskCourse(task.courseName);
+    setTaskCategory(task.category || 'Study');
     setTaskDueDate(task.dueDate);
     setTaskDueTime(task.dueTime);
     setTaskPriority(task.priority);
@@ -134,6 +205,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         title: taskTitle,
         description: taskDescription,
         courseName: taskCourse,
+        category: taskCategory,
         dueDate: taskDueDate,
         dueTime: taskDueTime,
         priority: taskPriority,
@@ -144,6 +216,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         title: taskTitle,
         description: taskDescription,
         courseName: taskCourse,
+        category: taskCategory,
         dueDate: taskDueDate,
         dueTime: taskDueTime,
         priority: taskPriority,
@@ -179,11 +252,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (taskFilter === 'pending' && t.isCompleted) return false;
     if (taskFilter === 'completed' && !t.isCompleted) return false;
     if (taskFilter === 'class' && !t.isClassTask) return false;
+    if (selectedCategory !== 'all' && (t.category || 'Study') !== selectedCategory) return false;
     if (taskSearch.trim()) {
       const q = taskSearch.toLowerCase();
       return (
         t.title.toLowerCase().includes(q) ||
         t.courseName.toLowerCase().includes(q) ||
+        (t.category && t.category.toLowerCase().includes(q)) ||
         t.description.toLowerCase().includes(q)
       );
     }
@@ -385,7 +460,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       )}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-gray-900 leading-snug truncate">{t.title}</h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-gray-900 leading-snug truncate">{t.title}</h4>
+                        <CategoryTag category={t.category || 'Study'} />
+                      </div>
                       <div className="flex flex-wrap items-center gap-1.5 text-xs mt-1">
                         <span className="text-red-600 font-medium">{t.courseName}</span>
                         <span className="text-gray-400">•</span>
@@ -555,37 +633,75 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Filter Bar & Search */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-medium">
-              {[
-                { key: 'all', label: 'Semua' },
-                { key: 'pending', label: 'Belum Selesai' },
-                { key: 'completed', label: 'Selesai' },
-                { key: 'class', label: 'Tugas Kelas' },
-              ].map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setTaskFilter(f.key as any)}
-                  className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                    taskFilter === f.key
-                      ? 'bg-red-600 text-white font-bold'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+          <div className="space-y-2.5 pt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-medium">
+                {[
+                  { key: 'all', label: 'Semua Status' },
+                  { key: 'pending', label: 'Belum Selesai' },
+                  { key: 'completed', label: 'Selesai' },
+                  { key: 'class', label: 'Tugas Kelas' },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setTaskFilter(f.key as any)}
+                    className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
+                      taskFilter === f.key
+                        ? 'bg-red-600 text-white font-bold'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative min-w-[200px]">
+                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  placeholder="Cari tugas..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                />
+              </div>
             </div>
 
-            <div className="relative min-w-[200px]">
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-                placeholder="Cari tugas..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
-              />
+            {/* Category Filter Pills (Colored Tag Filter) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+                <Tag className="w-3 h-3 text-gray-400" />
+                Kategori:
+              </span>
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
+                  selectedCategory === 'all'
+                    ? 'bg-gray-800 text-white shadow-2xs font-bold'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Semua Kategori
+              </button>
+              {(['Study', 'Work', 'Personal', 'Organization'] as TaskCategory[]).map((cat) => {
+                const cfg = CATEGORY_CONFIG[cat];
+                const isSel = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap flex items-center gap-1 transition-all border ${
+                      isSel
+                        ? `${cfg.bg} ${cfg.text} ${cfg.border} ring-2 ring-gray-800 font-bold shadow-2xs`
+                        : `${cfg.bg} ${cfg.text} ${cfg.border} opacity-75 hover:opacity-100`
+                    }`}
+                  >
+                    <span>{cfg.icon}</span>
+                    <span>{cfg.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -626,6 +742,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <h4 className={`text-xs font-bold ${t.isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                           {t.title}
                         </h4>
+                        <CategoryTag category={t.category || 'Study'} />
                         {t.isClassTask && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                             <span>📢 Tugas Kelas</span>
@@ -838,10 +955,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         )}
                       </button>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className={`text-xs font-bold ${t.isCompleted ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                             {t.title}
                           </h4>
+                          <CategoryTag category={t.category || 'Study'} />
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                             t.priority === 'HIGH' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'
                           }`}>
@@ -896,6 +1014,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   ))}
                   <option value="Tugas Umum / Lainnya">Tugas Umum / Lainnya</option>
                 </select>
+              </div>
+
+              {/* Category Tag Selection */}
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                  <span>Kategori Tugas</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Pilih tag warna</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['Study', 'Work', 'Personal', 'Organization'] as TaskCategory[]).map((cat) => {
+                    const cfg = CATEGORY_CONFIG[cat];
+                    const isSelected = taskCategory === cat;
+                    return (
+                      <button
+                        type="button"
+                        key={cat}
+                        onClick={() => setTaskCategory(cat)}
+                        className={`py-2 px-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          isSelected
+                            ? `${cfg.bg} ${cfg.text} ${cfg.border} ring-2 ring-red-500 font-bold shadow-xs`
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="text-sm">{cfg.icon}</span>
+                        <span>{cfg.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
