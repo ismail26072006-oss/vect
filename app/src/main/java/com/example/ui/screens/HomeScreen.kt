@@ -88,6 +88,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -442,66 +443,7 @@ fun HomeScreen(
             modifier = modifier.fillMaxSize(),
             topBar = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // 1. Browser Chrome / Address Bar (mahasiswa.siakad.ung.ac.id/...)
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color(0xFFF1F3F4),
-                        tonalElevation = 1.dp
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(18.dp),
-                                color = Color.White,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Lock,
-                                        contentDescription = "SSL Secure",
-                                        tint = Color(0xFF2E7D32),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = if (activeNavPage == MainNavPage.DASHBOARD) "mahasiswa.vectoreal.education/dashboard" else "mahasiswa.vectoreal.education/biodata",
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF333333),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-
-                            // Badge Vectoreal Education
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFFD32F2F)
-                            ) {
-                                Text(
-                                    text = "VECTOREAL EDUCATION",
-                                    fontSize = 8.5.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // 2. Web Navbar Putih (Hamburger Menu drawer, Info Pengguna, Avatar Profil + Dropdown)
+                    // Web Navbar Putih (Hamburger Menu drawer, Info Pengguna, Avatar Profil + Dropdown)
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.White,
@@ -527,7 +469,17 @@ fun HomeScreen(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+
+                                // Divider vertikal '|' ala web portal SIAKAD (Screenshot 011844)
+                                Box(
+                                    modifier = Modifier
+                                        .height(20.dp)
+                                        .width(1.dp)
+                                        .background(Color(0xFFE0E0E0))
+                                )
+
+                                Spacer(modifier = Modifier.width(10.dp))
 
                                 Column {
                                     Text(
@@ -745,7 +697,7 @@ fun HomeScreen(
                                     .padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                // Judul Dashboard
+                                // Judul Dashboard ala Web Portal SIAKAD (Screenshot 011844)
                                 if (selectedFeatureTab != DashboardTab.KALENDER) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -755,25 +707,26 @@ fun HomeScreen(
                                     Column {
                                         Text(
                                             text = when (selectedFeatureTab) {
-                                                DashboardTab.SEMUA -> "Dashboard Akademik"
+                                                DashboardTab.SEMUA -> "Dashboard"
                                                 DashboardTab.JADWAL -> "Jadwal Mata Kuliah"
                                                 DashboardTab.TUGAS -> "Deadline Tugas"
                                                 DashboardTab.KALENDER -> ""
                                             },
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Black,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
                                             color = Color.White
                                         )
-                                        Text(
-                                            text = when (selectedFeatureTab) {
-                                                DashboardTab.SEMUA -> "Jadwal perkuliahan dan deadline tugas aktif"
-                                                DashboardTab.JADWAL -> "Daftar jadwal perkuliahan dari Sen s/d Sab"
-                                                DashboardTab.TUGAS -> "${allTasks.count { !it.isCompleted }} tugas aktif perlu diselesaikan"
-                                                DashboardTab.KALENDER -> ""
-                                            },
-                                            fontSize = 11.sp,
-                                            color = Color.White.copy(alpha = 0.85f)
-                                        )
+                                        if (selectedFeatureTab != DashboardTab.SEMUA) {
+                                            Text(
+                                                text = when (selectedFeatureTab) {
+                                                    DashboardTab.JADWAL -> "Daftar jadwal perkuliahan dari Sen s/d Sab"
+                                                    DashboardTab.TUGAS -> "${allTasks.count { !it.isCompleted }} tugas aktif perlu diselesaikan"
+                                                    else -> ""
+                                                },
+                                                fontSize = 11.sp,
+                                                color = Color.White.copy(alpha = 0.85f)
+                                            )
+                                        }
                                     }
 
                                     Surface(
@@ -802,6 +755,9 @@ fun HomeScreen(
                                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                         when (currentTab) {
                                             DashboardTab.SEMUA -> {
+                                                // 3 KPI Akademik Sesuai Screenshot SIAKAD 011844
+                                                AcademicKpiCards()
+
                                                 WeeklyScheduleCard(
                                                     schedules = schedules,
                                                     onAddSchedule = { viewModel.addSchedule(it) },
@@ -881,6 +837,64 @@ fun HomeScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    // Kartu Akses Biodata Mahasiswa (Screenshot SIAKAD 011844)
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable { activeNavPage = MainNavPage.BIODATA },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEEEEEE))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(0xFFFFEBEE),
+                                    modifier = Modifier.size(42.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Badge,
+                                            contentDescription = null,
+                                            tint = Color(0xFFD32F2F),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Biodata Mahasiswa",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF212121)
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Lengkapi biodata untuk pelaporan data ke PDDikti (Pangkalan Data Pendidikan Tinggi)",
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFF757575),
+                                        lineHeight = 16.sp
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = "Buka Biodata",
+                                    tint = Color(0xFF9E9E9E),
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     }
@@ -1275,3 +1289,171 @@ private fun WebPortalFooter(modifier: Modifier = Modifier) {
         )
     }
 }
+
+@Composable
+private fun AcademicKpiCards(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Row 1: IPK & Tunggakan
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Card 1: IPK
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "IPK",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF616161)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.School,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "3.48",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Sangat Memuaskan",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF2E7D32)
+                    )
+                }
+            }
+
+            // Card 2: Total Tunggakan
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Total Tunggakan",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF616161)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.CreditCard,
+                            contentDescription = null,
+                            tint = Color(0xFF1976D2),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Rp. 0",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Kewajiban lunas",
+                        fontSize = 10.5.sp,
+                        color = Color(0xFF757575)
+                    )
+                }
+            }
+        }
+
+        // Card 3: Jumlah SKS
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Jumlah SKS",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF616161)
+                        )
+                    }
+                    Text(
+                        text = "40 / 144 SKS",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF212121)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { 40f / 144f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFFD32F2F),
+                    trackColor = Color(0xFFFFCDD2)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "104 SKS lagi untuk lulus sarjana",
+                    fontSize = 11.sp,
+                    color = Color(0xFF757575)
+                )
+            }
+        }
+    }
+}
+

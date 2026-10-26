@@ -1,0 +1,1147 @@
+import React, { useState } from 'react';
+import { 
+  UserProfile, 
+  CourseSchedule, 
+  TaskItem, 
+  DashboardTab, 
+  TaskPriority,
+  UserRole 
+} from '../types';
+import { 
+  GraduationCap, 
+  CreditCard, 
+  BookOpen, 
+  Clock, 
+  MapPin, 
+  User, 
+  Plus, 
+  Calendar as CalendarIcon, 
+  CheckCircle2, 
+  Circle, 
+  AlertCircle, 
+  Trash2, 
+  Edit3, 
+  Search, 
+  ChevronLeft, 
+  ChevronRight,
+  Broadcast,
+  Share2,
+  Check
+} from 'lucide-react';
+
+interface DashboardViewProps {
+  user: UserProfile;
+  schedules: CourseSchedule[];
+  tasks: TaskItem[];
+  onAddTask: (task: Omit<TaskItem, 'id' | 'createdAt'>) => void;
+  onEditTask: (task: TaskItem) => void;
+  onDeleteTask: (id: string) => void;
+  onToggleTask: (id: string) => void;
+  onAddSchedule: (schedule: Omit<CourseSchedule, 'id'>) => void;
+  onDeleteSchedule: (id: string) => void;
+  onOpenBiodata: () => void;
+}
+
+export const DashboardView: React.FC<DashboardViewProps> = ({
+  user,
+  schedules,
+  tasks,
+  onAddTask,
+  onEditTask,
+  onDeleteTask,
+  onToggleTask,
+  onAddSchedule,
+  onDeleteSchedule,
+  onOpenBiodata,
+}) => {
+  const [activeTab, setActiveTab] = useState<DashboardTab>('semua');
+  const [selectedDay, setSelectedDay] = useState<string>('Senin');
+
+  // Task Filter states
+  const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed' | 'class'>('all');
+  const [taskSearch, setTaskSearch] = useState('');
+
+  // Calendar states
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [selectedCalendarDayStr, setSelectedCalendarDayStr] = useState<string | null>(null);
+
+  // Dialog states
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  // Form states for Task
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskCourse, setTaskCourse] = useState('');
+  const [taskDueDate, setTaskDueDate] = useState('');
+  const [taskDueTime, setTaskDueTime] = useState('23:59');
+  const [taskPriority, setTaskPriority] = useState<TaskPriority>('MEDIUM');
+  const [taskIsClass, setTaskIsClass] = useState(true);
+
+  // Form states for Schedule
+  const [schedCourseName, setSchedCourseName] = useState('');
+  const [schedCourseCode, setSchedCourseCode] = useState('');
+  const [schedDay, setSchedDay] = useState('Senin');
+  const [schedStart, setSchedStart] = useState('08:00');
+  const [schedEnd, setSchedEnd] = useState('10:30');
+  const [schedRoom, setSchedRoom] = useState('Ruang Teori 1');
+  const [schedLecturer, setSchedLecturer] = useState('');
+  const [schedSks, setSchedSks] = useState(3);
+
+  const daysShort = [
+    { key: 'Senin', label: 'Sen' },
+    { key: 'Selasa', label: 'Sel' },
+    { key: 'Rabu', label: 'Rab' },
+    { key: 'Kamis', label: 'Kam' },
+    { key: 'Jumat', label: 'Jum' },
+    { key: 'Sabtu', label: 'Sab' },
+  ];
+
+  // Open Task modal for creation
+  const handleOpenCreateTask = () => {
+    setEditingTask(null);
+    setTaskTitle('');
+    setTaskDescription('');
+    setTaskCourse(schedules[0]?.courseName || 'Mata Kuliah Umum');
+    setTaskDueDate(new Date().toISOString().split('T')[0]);
+    setTaskDueTime('23:59');
+    setTaskPriority('MEDIUM');
+    setTaskIsClass(user.role === 'KETUA_KELAS');
+    setShowTaskModal(true);
+  };
+
+  // Open Task modal for editing
+  const handleOpenEditTask = (task: TaskItem) => {
+    setEditingTask(task);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description);
+    setTaskCourse(task.courseName);
+    setTaskDueDate(task.dueDate);
+    setTaskDueTime(task.dueTime);
+    setTaskPriority(task.priority);
+    setTaskIsClass(task.isClassTask);
+    setShowTaskModal(true);
+  };
+
+  const handleSaveTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskTitle.trim()) return;
+
+    if (editingTask) {
+      onEditTask({
+        ...editingTask,
+        title: taskTitle,
+        description: taskDescription,
+        courseName: taskCourse,
+        dueDate: taskDueDate,
+        dueTime: taskDueTime,
+        priority: taskPriority,
+        isClassTask: taskIsClass,
+      });
+    } else {
+      onAddTask({
+        title: taskTitle,
+        description: taskDescription,
+        courseName: taskCourse,
+        dueDate: taskDueDate,
+        dueTime: taskDueTime,
+        priority: taskPriority,
+        isCompleted: false,
+        isClassTask: taskIsClass,
+      });
+    }
+    setShowTaskModal(false);
+  };
+
+  const handleSaveSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!schedCourseName.trim()) return;
+
+    onAddSchedule({
+      courseName: schedCourseName,
+      courseCode: schedCourseCode || 'MK' + Math.floor(100 + Math.random() * 900),
+      dayOfWeek: schedDay,
+      startTime: schedStart,
+      endTime: schedEnd,
+      room: schedRoom,
+      lecturer: schedLecturer || 'Dosen Pengampu',
+      sks: Number(schedSks) || 3,
+    });
+    setShowScheduleModal(false);
+    setSchedCourseName('');
+    setSchedCourseCode('');
+    setSchedLecturer('');
+  };
+
+  // Filtered tasks
+  const filteredTasks = tasks.filter((t) => {
+    if (taskFilter === 'pending' && t.isCompleted) return false;
+    if (taskFilter === 'completed' && !t.isCompleted) return false;
+    if (taskFilter === 'class' && !t.isClassTask) return false;
+    if (taskSearch.trim()) {
+      const q = taskSearch.toLowerCase();
+      return (
+        t.title.toLowerCase().includes(q) ||
+        t.courseName.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  // Calendar calculations
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sun
+  // shift so Mon is 0: (day + 6) % 7
+  const adjustedFirstDay = (firstDayIndex + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const prevMonth = () => {
+    setCalendarDate(new Date(year, month - 1, 1));
+  };
+  const nextMonth = () => {
+    setCalendarDate(new Date(year, month + 1, 1));
+  };
+
+  // Tasks for a given day in format YYYY-MM-DD
+  const getTasksForDate = (dateStr: string) => {
+    return tasks.filter((t) => t.dueDate === dateStr);
+  };
+
+  const tasksOnSelectedCalendarDay = selectedCalendarDayStr
+    ? getTasksForDate(selectedCalendarDayStr)
+    : [];
+
+  return (
+    <div className="space-y-5 max-w-5xl mx-auto pb-12">
+      {/* 1. Red Header Container (Dashboard) */}
+      <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white rounded-xl shadow-sm p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center font-bold text-lg">
+              Σ
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">Dashboard</h1>
+              <p className="text-xs text-red-100 font-medium">
+                Portal Akademik Mahasiswa • PTI UNG
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden sm:block text-right text-xs text-red-100">
+            <p className="font-semibold">{user.prodi}</p>
+            <p className="text-[11px] opacity-80">Semester {user.semester} • TA 2024/2025</p>
+          </div>
+        </div>
+
+        {/* 4 Tabs: Semua, Jadwal MK, Tugas, Kalender (All in 1 row without sliding) */}
+        <div className="grid grid-cols-4 gap-1.5 p-1 bg-black/20 rounded-lg text-xs font-semibold">
+          {[
+            { id: 'semua' as DashboardTab, label: 'Semua' },
+            { id: 'jadwal' as DashboardTab, label: 'Jadwal MK' },
+            { id: 'tugas' as DashboardTab, label: 'Tugas' },
+            { id: 'kalender' as DashboardTab, label: 'Kalender' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-2 px-1 text-center rounded-md transition-all truncate ${
+                  isActive
+                    ? 'bg-white text-red-700 font-bold shadow-xs'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. TAB CONTENT */}
+      {/* 2.1 TAB SEMUA */}
+      {activeTab === 'semua' && (
+        <div className="space-y-5">
+          {/* 3 KPI Academic Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* Card 1: IPK */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-500">IPK</span>
+                <GraduationCap className="w-4 h-4 text-red-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{user.ipk.toFixed(2)}</p>
+              <p className="text-[11px] font-semibold text-green-700 mt-1">
+                Predikat: Sangat Memuaskan
+              </p>
+            </div>
+
+            {/* Card 2: Total Tunggakan */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-500">Total Tunggakan</span>
+                <CreditCard className="w-4 h-4 text-blue-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                Rp. {user.tunggakan.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Akumulasi kewajiban belum dibayar
+              </p>
+            </div>
+
+            {/* Card 3: Jumlah SKS */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-500">Jumlah SKS</span>
+                <BookOpen className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-gray-900">
+                  {user.sksSelesai} <span className="text-xs font-normal text-gray-500">/ {user.sksTotal} SKS</span>
+                </p>
+                <span className="text-xs font-bold text-red-600">
+                  {Math.round((user.sksSelesai / user.sksTotal) * 100)}%
+                </span>
+              </div>
+              {/* Progress Bar */}
+              <div className="w-full bg-red-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="bg-red-600 h-full rounded-full transition-all"
+                  style={{ width: `${(user.sksSelesai / user.sksTotal) * 100}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                {user.sksTotal - user.sksSelesai} SKS lagi untuk lulus sarjana
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Schedule & Tasks Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Quick Jadwal Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-red-600" />
+                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                    Jadwal Kuliah Terdekat
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setActiveTab('jadwal')}
+                  className="text-xs text-red-600 font-semibold hover:underline"
+                >
+                  Lihat Semua
+                </button>
+              </div>
+
+              <div className="divide-y divide-gray-100 mt-2">
+                {schedules.slice(0, 3).map((s) => (
+                  <div key={s.id} className="py-2.5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-900">{s.courseName}</h4>
+                        <p className="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
+                          <span>{s.dayOfWeek}, {s.startTime} - {s.endTime}</span>
+                          <span>•</span>
+                          <span>{s.room}</span>
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                        {s.sks} SKS
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Deadlines Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-red-600" />
+                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                    Tenggat Tugas Mendatang
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setActiveTab('tugas')}
+                  className="text-xs text-red-600 font-semibold hover:underline"
+                >
+                  Lihat Semua
+                </button>
+              </div>
+
+              <div className="divide-y divide-gray-100 mt-2">
+                {tasks.filter(t => !t.isCompleted).slice(0, 3).map((t) => (
+                  <div key={t.id} className="py-2.5 flex items-start gap-2.5">
+                    <button
+                      onClick={() => onToggleTask(t.id)}
+                      className="mt-0.5 text-gray-400 hover:text-green-600"
+                    >
+                      <Circle className="w-4 h-4" />
+                    </button>
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-gray-900 leading-snug">{t.title}</h4>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                        <span className="text-red-600 font-medium">{t.courseName}</span>
+                        <span>•</span>
+                        <span>{t.dueDate} ({t.dueTime})</span>
+                      </div>
+                    </div>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                      t.priority === 'HIGH' 
+                        ? 'bg-red-50 text-red-700 border border-red-200' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      {t.priority}
+                    </span>
+                  </div>
+                ))}
+                {tasks.filter(t => !t.isCompleted).length === 0 && (
+                  <p className="text-xs text-gray-400 py-4 text-center">
+                    Tidak ada tugas yang tertunda.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Web Biodata Info Card */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold text-lg border border-red-200">
+                IK
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900">Biodata Mahasiswa (PDDikti)</h4>
+                <p className="text-xs text-gray-500">
+                  NIM: <strong className="text-gray-700">{user.nim}</strong> • Status: <span className="text-green-600 font-semibold">{user.statusAkademik}</span>
+                </p>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Lengkapi dan validasi biodata diri untuk pelaporan data akademik ke Dikti.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onOpenBiodata}
+              className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+            >
+              Lihat Profil Lengkap
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2.2 TAB JADWAL MK */}
+      {activeTab === 'jadwal' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-2xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Jadwal Perkuliahan</h2>
+              <p className="text-xs text-gray-500">
+                Daftar mata kuliah aktif semester berjalan
+              </p>
+            </div>
+
+            {/* Ketua Kelas Button to Add Schedule */}
+            {user.role === 'KETUA_KELAS' && (
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Jadwal MK</span>
+              </button>
+            )}
+          </div>
+
+          {/* Day selection buttons (Sen, Sel, Rab, Kam, Jum, Sab) */}
+          <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-100 rounded-lg">
+            {daysShort.map((d) => {
+              const isSelected = selectedDay === d.key;
+              return (
+                <button
+                  key={d.key}
+                  onClick={() => setSelectedDay(d.key)}
+                  className={`py-2 text-center text-xs font-bold rounded-md transition-all ${
+                    isSelected
+                      ? 'bg-red-600 text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* List of courses for selected day */}
+          <div className="space-y-3">
+            {schedules.filter((s) => s.dayOfWeek === selectedDay).length === 0 ? (
+              <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-gray-500">
+                  Tidak ada jadwal kuliah di hari {selectedDay}
+                </p>
+                {user.role === 'KETUA_KELAS' && (
+                  <button
+                    onClick={() => {
+                      setSchedDay(selectedDay);
+                      setShowScheduleModal(true);
+                    }}
+                    className="mt-2 text-xs text-red-600 font-bold hover:underline"
+                  >
+                    + Tambah mata kuliah untuk hari ini
+                  </button>
+                )}
+              </div>
+            ) : (
+              schedules
+                .filter((s) => s.dayOfWeek === selectedDay)
+                .map((s) => (
+                  <div
+                    key={s.id}
+                    className="p-4 rounded-xl border border-gray-200 hover:border-red-200 hover:shadow-xs transition-all bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
+                          {s.courseCode}
+                        </span>
+                        <span className="text-xs font-bold text-gray-900">{s.courseName}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{s.lecturer}</span>
+                      </p>
+                      <div className="flex items-center gap-4 text-[11px] text-gray-500 pt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                          {s.startTime} - {s.endTime}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                          {s.room}
+                        </span>
+                        <span className="font-semibold text-gray-700">
+                          {s.sks} SKS
+                        </span>
+                      </div>
+                    </div>
+
+                    {user.role === 'KETUA_KELAS' && (
+                      <button
+                        onClick={() => onDeleteSchedule(s.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors self-end sm:self-auto"
+                        title="Hapus Jadwal (Khusus Ketua Kelas)"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2.3 TAB TUGAS */}
+      {activeTab === 'tugas' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-2xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Daftar Tugas & Deadline</h2>
+              <p className="text-xs text-gray-500">
+                Kelola tugas kuliah, praktikum, dan proyek kelompok
+              </p>
+            </div>
+
+            {/* Ketua Kelas Button to Add Task */}
+            {user.role === 'KETUA_KELAS' ? (
+              <button
+                onClick={handleOpenCreateTask}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Buat Tugas Kelas</span>
+              </button>
+            ) : (
+              <div className="text-[11px] text-gray-400 italic">
+                *Hanya Ketua Kelas yang dapat menyiarkan tugas baru ke kelas.
+              </div>
+            )}
+          </div>
+
+          {/* Filter Bar & Search */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-medium">
+              {[
+                { key: 'all', label: 'Semua' },
+                { key: 'pending', label: 'Belum Selesai' },
+                { key: 'completed', label: 'Selesai' },
+                { key: 'class', label: 'Tugas Kelas' },
+              ].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setTaskFilter(f.key as any)}
+                  className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
+                    taskFilter === f.key
+                      ? 'bg-red-600 text-white font-bold'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative min-w-[200px]">
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={taskSearch}
+                onChange={(e) => setTaskSearch(e.target.value)}
+                placeholder="Cari tugas..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          {/* Task list cards */}
+          <div className="space-y-3">
+            {filteredTasks.length === 0 ? (
+              <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-gray-500">
+                  Tidak ada tugas yang sesuai filter.
+                </p>
+              </div>
+            ) : (
+              filteredTasks.map((t) => (
+                <div
+                  key={t.id}
+                  className={`p-4 rounded-xl border transition-all ${
+                    t.isCompleted
+                      ? 'bg-gray-50/70 border-gray-200 opacity-75'
+                      : 'bg-white border-gray-200 hover:border-red-200 hover:shadow-xs'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={() => onToggleTask(t.id)}
+                      className="mt-1 text-gray-400 hover:text-green-600 transition-colors"
+                      title={t.isCompleted ? 'Tandai belum selesai' : 'Tandai selesai'}
+                    >
+                      {t.isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+
+                    <div className="flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className={`text-xs font-bold ${t.isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                          {t.title}
+                        </h4>
+                        {t.isClassTask && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                            <span>📢 Tugas Kelas</span>
+                          </span>
+                        )}
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          t.priority === 'HIGH'
+                            ? 'bg-red-50 text-red-700 border border-red-200'
+                            : t.priority === 'MEDIUM'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-green-50 text-green-700 border border-green-200'
+                        }`}>
+                          {t.priority}
+                        </span>
+                      </div>
+
+                      {t.description && (
+                        <p className="text-xs text-gray-600 pt-0.5">{t.description}</p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 pt-1">
+                        <span className="font-semibold text-red-600">{t.courseName}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                          Batas: {t.dueDate} ({t.dueTime})
+                        </span>
+                      </div>
+                    </div>
+
+                    {user.role === 'KETUA_KELAS' && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleOpenEditTask(t)}
+                          className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100"
+                          title="Edit Tugas"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteTask(t.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50"
+                          title="Hapus Tugas"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2.4 TAB KALENDER */}
+      {/* Sesuai instruksi: "pada opsi kalender langsung munculkan kalender saja tidak usa tugas.. tugas muncul ketika opsi tanggal yang ad tugasnya di klik dan muncul tugas apa saja pada tanggal tersebut" */}
+      {activeTab === 'kalender' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-2xs">
+            {/* Calendar Header with Month Navigation */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">
+                  {monthNames[month]} {year}
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Klik tanggal untuk melihat tugas dan deadline pada hari tersebut
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={prevMonth}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition-colors"
+                  title="Bulan Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setCalendarDate(new Date())}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-700"
+                >
+                  Hari Ini
+                </button>
+                <button
+                  onClick={nextMonth}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition-colors"
+                  title="Bulan Berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Day of Week Headers (Sen, Sel, Rab, Kam, Jum, Sab, Min) */}
+            <div className="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-500 mb-2">
+              <span>Sen</span>
+              <span>Sel</span>
+              <span>Rab</span>
+              <span>Kam</span>
+              <span>Jum</span>
+              <span>Sab</span>
+              <span className="text-red-500">Min</span>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {/* Empty offset days */}
+              {Array.from({ length: adjustedFirstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-16 sm:h-20 bg-gray-50/50 rounded-lg" />
+              ))}
+
+              {/* Day cells */}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                const dayTasks = getTasksForDate(dateStr);
+                const isSelected = selectedCalendarDayStr === dateStr;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const isToday = dateStr === todayStr;
+
+                return (
+                  <div
+                    key={`day-${dayNum}`}
+                    onClick={() => setSelectedCalendarDayStr(dateStr)}
+                    className={`h-16 sm:h-20 p-1.5 rounded-lg border text-left cursor-pointer transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-red-600 ring-2 ring-red-500/20 bg-red-50/40'
+                        : isToday
+                        ? 'border-red-300 bg-red-50/20'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold ${
+                        isToday 
+                          ? 'w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]' 
+                          : isSelected
+                          ? 'text-red-700 font-extrabold'
+                          : 'text-gray-800'
+                      }`}>
+                        {dayNum}
+                      </span>
+                      {dayTasks.length > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-red-600 text-white leading-tight">
+                          {dayTasks.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Indicator dots or mini pills */}
+                    <div className="space-y-0.5 overflow-hidden">
+                      {dayTasks.slice(0, 1).map((t) => (
+                        <div
+                          key={t.id}
+                          className="text-[9px] truncate px-1 py-0.2 rounded bg-red-100 text-red-800 font-medium"
+                        >
+                          {t.title}
+                        </div>
+                      ))}
+                      {dayTasks.length > 1 && (
+                        <p className="text-[8px] text-gray-400 font-medium pl-1">
+                          +{dayTasks.length - 1} lagi
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* DETAIL TUGAS PADA TANGGAL YANG DIKLIK (Hanya muncul jika tanggal diklik) */}
+          {selectedCalendarDayStr && (
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-2xs animate-fadeIn">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-red-600" />
+                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                    Tugas pada Tanggal: <span className="text-red-600">{selectedCalendarDayStr}</span>
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedCalendarDayStr(null)}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <div className="divide-y divide-gray-100 mt-2">
+                {tasksOnSelectedCalendarDay.length === 0 ? (
+                  <p className="text-xs text-gray-400 py-4 text-center">
+                    Tidak ada tugas yang dijadwalkan pada tanggal ini ({selectedCalendarDayStr}).
+                  </p>
+                ) : (
+                  tasksOnSelectedCalendarDay.map((t) => (
+                    <div key={t.id} className="py-2.5 flex items-start gap-2.5">
+                      <button
+                        onClick={() => onToggleTask(t.id)}
+                        className="mt-0.5 text-gray-400 hover:text-green-600"
+                      >
+                        {t.isCompleted ? (
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Circle className="w-4 h-4" />
+                        )}
+                      </button>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className={`text-xs font-bold ${t.isCompleted ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                            {t.title}
+                          </h4>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            t.priority === 'HIGH' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {t.priority}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{t.courseName} • Batas: {t.dueTime}</p>
+                        {t.description && <p className="text-xs text-gray-600 mt-1">{t.description}</p>}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3. MODAL: Buat / Edit Tugas (Khusus Ketua Kelas atau Tugas Baru) */}
+      {showTaskModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xs">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-md w-full p-6">
+            <h3 className="text-sm font-bold text-gray-900 mb-1">
+              {editingTask ? 'Edit Tugas Perkuliahan' : 'Buat Tugas Baru'}
+            </h3>
+            <p className="text-xs text-gray-500 mb-4">
+              {user.role === 'KETUA_KELAS' ? 'Tugas dapat disiarkan langsung ke seluruh kelas' : 'Tugas catatan pribadi'}
+            </p>
+
+            <form onSubmit={handleSaveTask} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Judul Tugas</label>
+                <input
+                  type="text"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="Contoh: Laporan Praktikum Modul 3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Mata Kuliah</label>
+                <select
+                  value={taskCourse}
+                  onChange={(e) => setTaskCourse(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                >
+                  {schedules.map((s) => (
+                    <option key={s.id} value={s.courseName}>{s.courseName}</option>
+                  ))}
+                  <option value="Tugas Umum / Lainnya">Tugas Umum / Lainnya</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Tanggal Deadline</label>
+                  <input
+                    type="date"
+                    value={taskDueDate}
+                    onChange={(e) => setTaskDueDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Jam Deadline</label>
+                  <input
+                    type="time"
+                    value={taskDueTime}
+                    onChange={(e) => setTaskDueTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Prioritas</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['LOW', 'MEDIUM', 'HIGH'] as TaskPriority[]).map((p) => (
+                    <button
+                      type="button"
+                      key={p}
+                      onClick={() => setTaskPriority(p)}
+                      className={`py-1.5 rounded-lg border text-center font-bold ${
+                        taskPriority === p
+                          ? 'border-red-600 bg-red-50 text-red-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {p === 'HIGH' ? 'Tinggi' : p === 'MEDIUM' ? 'Sedang' : 'Rendah'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Deskripsi / Petunjuk Pengerjaan</label>
+                <textarea
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  placeholder="Keterangan format PDF, link pengumpulan, dsb."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+
+              {user.role === 'KETUA_KELAS' && (
+                <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="classTaskBroadcast"
+                    checked={taskIsClass}
+                    onChange={(e) => setTaskIsClass(e.target.checked)}
+                    className="w-4 h-4 text-red-600 rounded"
+                  />
+                  <label htmlFor="classTaskBroadcast" className="text-[11px] text-blue-900 font-medium cursor-pointer">
+                    Siarkan sebagai <strong>Tugas Resmi Kelas</strong> (Dilihat oleh seluruh mahasiswa)
+                  </label>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowTaskModal(false)}
+                  className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+                >
+                  Simpan Tugas
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL: Tambah Jadwal MK (Khusus Ketua Kelas) */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xs">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-md w-full p-6">
+            <h3 className="text-sm font-bold text-gray-900 mb-1">Tambah Jadwal Perkuliahan</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Khusus Ketua Kelas: Menetapkan jadwal kuliah semester untuk kelas PTI
+            </p>
+
+            <form onSubmit={handleSaveSchedule} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Nama Mata Kuliah</label>
+                <input
+                  type="text"
+                  value={schedCourseName}
+                  onChange={(e) => setSchedCourseName(e.target.value)}
+                  placeholder="Contoh: Pemrograman Web Lanjut"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Kode MK</label>
+                  <input
+                    type="text"
+                    value={schedCourseCode}
+                    onChange={(e) => setSchedCourseCode(e.target.value)}
+                    placeholder="Contoh: PTI310"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">SKS</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={6}
+                    value={schedSks}
+                    onChange={(e) => setSchedSks(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Hari</label>
+                  <select
+                    value={schedDay}
+                    onChange={(e) => setSchedDay(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  >
+                    <option value="Senin">Senin</option>
+                    <option value="Selasa">Selasa</option>
+                    <option value="Rabu">Rabu</option>
+                    <option value="Kamis">Kamis</option>
+                    <option value="Jumat">Jumat</option>
+                    <option value="Sabtu">Sabtu</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Jam Mulai</label>
+                  <input
+                    type="time"
+                    value={schedStart}
+                    onChange={(e) => setSchedStart(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Jam Selesai</label>
+                  <input
+                    type="time"
+                    value={schedEnd}
+                    onChange={(e) => setSchedEnd(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Ruangan / Lab</label>
+                  <input
+                    type="text"
+                    value={schedRoom}
+                    onChange={(e) => setSchedRoom(e.target.value)}
+                    placeholder="Contoh: Lab Komputer 2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Dosen Pengampu</label>
+                  <input
+                    type="text"
+                    value={schedLecturer}
+                    onChange={(e) => setSchedLecturer(e.target.value)}
+                    placeholder="Nama dosen & gelar"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+                >
+                  Simpan Jadwal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

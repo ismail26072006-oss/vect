@@ -102,49 +102,9 @@ fun LoginClassScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Browser Address Bar (mahasiswa.vecteducation.ac.id/login)
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF1F3F4),
-            tonalElevation = 1.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "SSL Secure",
-                            tint = Color(0xFF2E7D32),
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "mahasiswa.vecteducation.ac.id/login",
-                            fontSize = 11.5.sp,
-                            color = Color(0xFF333333),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-        }
+        Spacer(modifier = Modifier.height(36.dp))
 
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // 2. Logo VECT EDUCATION (Emblem Sigma & Teks Merah Putih)
+        // 2. Logo VECTOREAL EDUCATION (Emblem Sigma & Teks Merah Putih)
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // Emblem Logo Sigma
             Surface(
@@ -156,38 +116,38 @@ fun LoginClassScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.logo_sigma),
-                    contentDescription = "Logo Sigma Vect Education",
+                    contentDescription = "Logo Sigma Vectoreal Education",
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "VECT EDUCATION",
-                fontSize = 26.sp,
+                text = "VECTOREAL EDUCATION",
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.2.sp,
                 color = Color(0xFFD32F2F)
             )
 
             Text(
-                text = "SOLID • SIGMA • MATHEMATIC 25",
-                fontSize = 10.5.sp,
+                text = "SISTEM INFORMASI AKADEMIK",
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
+                letterSpacing = 1.2.sp,
                 color = Color(0xFF555555)
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // 3. Header Text: Masuk Sebagai Mahasiswa
         Text(
             text = "Masuk Sebagai Mahasiswa",
-            fontSize = 17.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF212121)
         )
@@ -195,21 +155,21 @@ fun LoginClassScreen(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Selamat Datang di Portal Vect Education",
-            fontSize = 12.sp,
+            text = "Selamat Datang di Portal Vectoreal Education",
+            fontSize = 12.5.sp,
             color = Color(0xFF757575)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 4. Form Masuk Kelas (Card Putih Bersih)
+        // 4. Form Masuk Kelas (Card Web Putih Bersih)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 20.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEEEEEE))
         ) {
             Column(
