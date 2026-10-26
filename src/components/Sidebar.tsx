@@ -42,17 +42,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Backdrop */}
       {isOpen && (
         <div 
           onClick={onClose} 
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 bg-black/50 z-40 backdrop-blur-xs transition-opacity"
         />
       )}
 
       {/* Drawer / Sidebar container */}
-      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-200 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-gray-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Brand Header */}
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -71,7 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-md text-gray-400 hover:text-gray-600 lg:hidden"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            title="Tutup Menu"
           >
             <X className="w-5 h-5" />
           </button>

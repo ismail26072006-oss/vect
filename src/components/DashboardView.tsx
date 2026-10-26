@@ -220,25 +220,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     : [];
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto pb-12">
+    <div className="space-y-4 max-w-2xl mx-auto pb-12">
       {/* 1. Red Header Container (Dashboard) */}
-      <div className="bg-[#D32F2F] text-white rounded-2xl shadow-sm p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xl select-none">
-              Σ
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Vectoreal Education</h1>
-              <p className="text-xs text-white/90 font-medium">
-                Manajemen Tugas & Jadwal Perkuliahan
-              </p>
-            </div>
+      <div className="bg-[#D32F2F] text-white rounded-2xl shadow-sm p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xl select-none">
+            Σ
           </div>
-
-          <div className="hidden sm:block text-right text-xs text-white/80">
-            <p className="font-semibold">{user.prodi}</p>
-            <p className="text-[11px] opacity-80">Kelas {user.angkatan} • TI UNG</p>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Vectoreal Education</h1>
+            <p className="text-xs text-white/90 font-medium">
+              Manajemen Tugas & Jadwal Perkuliahan
+            </p>
           </div>
         </div>
 
@@ -273,7 +266,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {activeTab === 'semua' && (
         <div className="space-y-4">
           {/* 3 Productivity Stat Cards (Tugas Belum Selesai, Tugas Diselesaikan, Jadwal Kuliah Hari Ini) */}
-          <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3.5">
+          <div className="space-y-3">
             {/* Card 1: Tugas Belum Selesai */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
               <div className="flex items-center justify-between mb-2">
