@@ -229,16 +229,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Σ
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight">Dashboard</h1>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">Vectoreal Education</h1>
               <p className="text-xs text-red-100 font-medium">
-                Portal Akademik Mahasiswa • PTI UNG
+                Manajemen Tugas & Jadwal Perkuliahan
               </p>
             </div>
           </div>
 
           <div className="hidden sm:block text-right text-xs text-red-100">
             <p className="font-semibold">{user.prodi}</p>
-            <p className="text-[11px] opacity-80">Semester {user.semester} • TA 2024/2025</p>
+            <p className="text-[11px] opacity-80">Kelas {user.angkatan} • TI UNG</p>
           </div>
         </div>
 
@@ -272,57 +272,50 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 2.1 TAB SEMUA */}
       {activeTab === 'semua' && (
         <div className="space-y-5">
-          {/* 3 KPI Academic Cards */}
+          {/* 3 Productivity Stat Cards (Tugas Aktif, Tugas Selesai, Jadwal Hari Ini) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {/* Card 1: IPK */}
+            {/* Card 1: Tugas Aktif */}
             <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">IPK</span>
-                <GraduationCap className="w-4 h-4 text-red-600" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{user.ipk.toFixed(2)}</p>
-              <p className="text-[11px] font-semibold text-green-700 mt-1">
-                Predikat: Sangat Memuaskan
-              </p>
-            </div>
-
-            {/* Card 2: Total Tunggakan */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">Total Tunggakan</span>
-                <CreditCard className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-semibold text-gray-500">Tugas Belum Selesai</span>
+                <Clock className="w-4 h-4 text-red-600" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                Rp. {user.tunggakan.toLocaleString('id-ID')}
+                {tasks.filter((t) => !t.isCompleted).length}
+                <span className="text-xs font-normal text-gray-500 ml-1.5">tugas</span>
               </p>
-              <p className="text-[11px] text-gray-500 mt-1">
-                Akumulasi kewajiban belum dibayar
+              <p className="text-[11px] font-semibold text-red-600 mt-1">
+                Perlu segera diselesaikan
               </p>
             </div>
 
-            {/* Card 3: Jumlah SKS */}
+            {/* Card 2: Tugas Selesai */}
             <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">Jumlah SKS</span>
-                <BookOpen className="w-4 h-4 text-red-600" />
+                <span className="text-xs font-semibold text-gray-500">Tugas Diselesaikan</span>
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
               </div>
-              <div className="flex items-baseline justify-between">
-                <p className="text-2xl font-bold text-gray-900">
-                  {user.sksSelesai} <span className="text-xs font-normal text-gray-500">/ {user.sksTotal} SKS</span>
-                </p>
-                <span className="text-xs font-bold text-red-600">
-                  {Math.round((user.sksSelesai / user.sksTotal) * 100)}%
-                </span>
+              <p className="text-2xl font-bold text-gray-900">
+                {tasks.filter((t) => t.isCompleted).length}
+                <span className="text-xs font-normal text-gray-500 ml-1.5">tugas</span>
+              </p>
+              <p className="text-[11px] font-semibold text-green-700 mt-1">
+                Sudah selesai dikerjakan
+              </p>
+            </div>
+
+            {/* Card 3: Jadwal Hari Ini */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-500">Jadwal Kuliah Hari Ini</span>
+                <BookOpen className="w-4 h-4 text-blue-600" />
               </div>
-              {/* Progress Bar */}
-              <div className="w-full bg-red-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div 
-                  className="bg-red-600 h-full rounded-full transition-all"
-                  style={{ width: `${(user.sksSelesai / user.sksTotal) * 100}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-gray-500 mt-1.5">
-                {user.sksTotal - user.sksSelesai} SKS lagi untuk lulus sarjana
+              <p className="text-2xl font-bold text-gray-900">
+                {schedules.filter((s) => s.dayOfWeek === ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()]).length}
+                <span className="text-xs font-normal text-gray-500 ml-1.5">mata kuliah</span>
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Hari {['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()]}
               </p>
             </div>
           </div>
@@ -417,30 +410,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Web Biodata Info Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold text-lg border border-red-200">
-                IK
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-900">Biodata Mahasiswa (PDDikti)</h4>
-                <p className="text-xs text-gray-500">
-                  NIM: <strong className="text-gray-700">{user.nim}</strong> • Status: <span className="text-green-600 font-semibold">{user.statusAkademik}</span>
-                </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  Lengkapi dan validasi biodata diri untuk pelaporan data akademik ke Dikti.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onOpenBiodata}
-              className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
-            >
-              Lihat Profil Lengkap
-            </button>
           </div>
         </div>
       )}

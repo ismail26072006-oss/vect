@@ -755,9 +755,6 @@ fun HomeScreen(
                                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                         when (currentTab) {
                                             DashboardTab.SEMUA -> {
-                                                // 3 KPI Akademik Sesuai Screenshot SIAKAD 011844
-                                                AcademicKpiCards()
-
                                                 WeeklyScheduleCard(
                                                     schedules = schedules,
                                                     onAddSchedule = { viewModel.addSchedule(it) },
