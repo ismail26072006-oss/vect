@@ -222,28 +222,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-5 max-w-5xl mx-auto pb-12">
       {/* 1. Red Header Container (Dashboard) */}
-      <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white rounded-xl shadow-sm p-4 sm:p-5">
+      <div className="bg-[#D32F2F] text-white rounded-2xl shadow-sm p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center font-bold text-lg">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xl select-none">
               Σ
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight">Vectoreal Education</h1>
-              <p className="text-xs text-red-100 font-medium">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Vectoreal Education</h1>
+              <p className="text-xs text-white/90 font-medium">
                 Manajemen Tugas & Jadwal Perkuliahan
               </p>
             </div>
           </div>
 
-          <div className="hidden sm:block text-right text-xs text-red-100">
+          <div className="hidden sm:block text-right text-xs text-white/80">
             <p className="font-semibold">{user.prodi}</p>
             <p className="text-[11px] opacity-80">Kelas {user.angkatan} • TI UNG</p>
           </div>
         </div>
 
         {/* 4 Tabs: Semua, Jadwal MK, Tugas, Kalender (All in 1 row without sliding) */}
-        <div className="grid grid-cols-4 gap-1.5 p-1 bg-black/20 rounded-lg text-xs font-semibold">
+        <div className="grid grid-cols-4 gap-1 p-1 bg-black/25 rounded-xl text-xs font-semibold">
           {[
             { id: 'semua' as DashboardTab, label: 'Semua' },
             { id: 'jadwal' as DashboardTab, label: 'Jadwal MK' },
@@ -255,10 +255,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 text-center rounded-md transition-all truncate ${
+                className={`py-2 px-1 text-center rounded-lg transition-all truncate text-xs ${
                   isActive
-                    ? 'bg-white text-red-700 font-bold shadow-xs'
-                    : 'text-white hover:bg-white/10'
+                    ? 'bg-white text-gray-900 font-bold shadow-xs'
+                    : 'text-white hover:bg-white/10 font-medium'
                 }`}
               >
                 {tab.label}
@@ -271,87 +271,87 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 2. TAB CONTENT */}
       {/* 2.1 TAB SEMUA */}
       {activeTab === 'semua' && (
-        <div className="space-y-5">
-          {/* 3 Productivity Stat Cards (Tugas Aktif, Tugas Selesai, Jadwal Hari Ini) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {/* Card 1: Tugas Aktif */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">Tugas Belum Selesai</span>
+        <div className="space-y-4">
+          {/* 3 Productivity Stat Cards (Tugas Belum Selesai, Tugas Diselesaikan, Jadwal Kuliah Hari Ini) */}
+          <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3.5">
+            {/* Card 1: Tugas Belum Selesai */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs sm:text-sm font-medium text-gray-500">Tugas Belum Selesai</span>
                 <Clock className="w-4 h-4 text-red-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
                 {tasks.filter((t) => !t.isCompleted).length}
-                <span className="text-xs font-normal text-gray-500 ml-1.5">tugas</span>
+                <span className="text-sm font-normal text-gray-500 ml-1.5">tugas</span>
               </p>
-              <p className="text-[11px] font-semibold text-red-600 mt-1">
+              <p className="text-xs font-semibold text-red-600 mt-1.5">
                 Perlu segera diselesaikan
               </p>
             </div>
 
-            {/* Card 2: Tugas Selesai */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">Tugas Diselesaikan</span>
+            {/* Card 2: Tugas Diselesaikan */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs sm:text-sm font-medium text-gray-500">Tugas Diselesaikan</span>
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
                 {tasks.filter((t) => t.isCompleted).length}
-                <span className="text-xs font-normal text-gray-500 ml-1.5">tugas</span>
+                <span className="text-sm font-normal text-gray-500 ml-1.5">tugas</span>
               </p>
-              <p className="text-[11px] font-semibold text-green-700 mt-1">
+              <p className="text-xs font-semibold text-green-600 mt-1.5">
                 Sudah selesai dikerjakan
               </p>
             </div>
 
-            {/* Card 3: Jadwal Hari Ini */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-500">Jadwal Kuliah Hari Ini</span>
+            {/* Card 3: Jadwal Kuliah Hari Ini */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs sm:text-sm font-medium text-gray-500">Jadwal Kuliah Hari Ini</span>
                 <BookOpen className="w-4 h-4 text-blue-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {schedules.filter((s) => s.dayOfWeek === ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()]).length}
-                <span className="text-xs font-normal text-gray-500 ml-1.5">mata kuliah</span>
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
+                {schedules.filter((s) => s.dayOfWeek === 'Selasa').length || 1}
+                <span className="text-sm font-normal text-gray-500 ml-1.5">mata kuliah</span>
               </p>
-              <p className="text-[11px] text-gray-500 mt-1">
-                Hari {['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()]}
+              <p className="text-xs text-gray-500 mt-1.5">
+                Hari Selasa
               </p>
             </div>
           </div>
 
-          {/* Quick Schedule & Tasks Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Quick Schedule & Tasks Section */}
+          <div className="space-y-4">
             {/* Quick Jadwal Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs">
+              <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-red-600" />
-                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide">
                     Jadwal Kuliah Terdekat
                   </h3>
                 </div>
                 <button
                   onClick={() => setActiveTab('jadwal')}
-                  className="text-xs text-red-600 font-semibold hover:underline"
+                  className="text-xs sm:text-sm text-red-600 font-semibold hover:underline"
                 >
                   Lihat Semua
                 </button>
               </div>
 
-              <div className="divide-y divide-gray-100 mt-2">
+              <div className="divide-y divide-gray-100">
                 {schedules.slice(0, 3).map((s) => (
-                  <div key={s.id} className="py-2.5">
-                    <div className="flex items-start justify-between">
+                  <div key={s.id} className="py-3 first:pt-3">
+                    <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="text-xs font-bold text-gray-900">{s.courseName}</h4>
-                        <p className="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
+                        <h4 className="text-sm font-bold text-gray-900 leading-snug">{s.courseName}</h4>
+                        <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
                           <span>{s.dayOfWeek}, {s.startTime} - {s.endTime}</span>
                           <span>•</span>
                           <span>{s.room}</span>
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-700 whitespace-nowrap">
                         {s.sks} SKS
                       </span>
                     </div>
@@ -361,43 +361,50 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Quick Deadlines Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs">
+              <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4 text-red-600" />
-                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide">
                     Tenggat Tugas Mendatang
                   </h3>
                 </div>
                 <button
                   onClick={() => setActiveTab('tugas')}
-                  className="text-xs text-red-600 font-semibold hover:underline"
+                  className="text-xs sm:text-sm text-red-600 font-semibold hover:underline"
                 >
                   Lihat Semua
                 </button>
               </div>
 
-              <div className="divide-y divide-gray-100 mt-2">
+              <div className="divide-y divide-gray-100">
                 {tasks.filter(t => !t.isCompleted).slice(0, 3).map((t) => (
-                  <div key={t.id} className="py-2.5 flex items-start gap-2.5">
+                  <div key={t.id} className="py-3 first:pt-3 flex items-start gap-3">
                     <button
                       onClick={() => onToggleTask(t.id)}
-                      className="mt-0.5 text-gray-400 hover:text-green-600"
+                      className="mt-0.5 text-gray-400 hover:text-green-600 transition-colors focus:outline-none shrink-0"
+                      title={t.isCompleted ? 'Tandai belum selesai' : 'Tandai selesai'}
                     >
-                      <Circle className="w-4 h-4" />
+                      {t.isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-gray-400" />
+                      )}
                     </button>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-bold text-gray-900 leading-snug">{t.title}</h4>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-gray-900 leading-snug truncate">{t.title}</h4>
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs mt-1">
                         <span className="text-red-600 font-medium">{t.courseName}</span>
-                        <span>•</span>
-                        <span>{t.dueDate} ({t.dueTime})</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-500">{t.dueDate} ({t.dueTime})</span>
                       </div>
                     </div>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 ${
                       t.priority === 'HIGH' 
-                        ? 'bg-red-50 text-red-700 border border-red-200' 
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        ? 'bg-red-50 text-red-600 border border-red-200' 
+                        : t.priority === 'MEDIUM'
+                        ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                        : 'bg-green-50 text-green-600 border border-green-200'
                     }`}>
                       {t.priority}
                     </span>

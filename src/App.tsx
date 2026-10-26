@@ -9,21 +9,22 @@ import { BiodataView } from './components/BiodataView';
 
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem('siakad_logged_in') === 'true';
+    const saved = localStorage.getItem('siakad_logged_in_v2');
+    return saved !== null ? saved === 'true' : true;
   });
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('siakad_user');
+    const saved = localStorage.getItem('siakad_user_v2');
     return saved ? JSON.parse(saved) : initialUser;
   });
 
   const [schedules, setSchedules] = useState<CourseSchedule[]>(() => {
-    const saved = localStorage.getItem('siakad_schedules');
+    const saved = localStorage.getItem('siakad_schedules_v2');
     return saved ? JSON.parse(saved) : initialSchedules;
   });
 
   const [tasks, setTasks] = useState<TaskItem[]>(() => {
-    const saved = localStorage.getItem('siakad_tasks');
+    const saved = localStorage.getItem('siakad_tasks_v2');
     return saved ? JSON.parse(saved) : initialTasks;
   });
 
@@ -32,19 +33,19 @@ export function App() {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem('siakad_logged_in', String(isLoggedIn));
+    localStorage.setItem('siakad_logged_in_v2', String(isLoggedIn));
   }, [isLoggedIn]);
 
   useEffect(() => {
-    localStorage.setItem('siakad_user', JSON.stringify(currentUser));
+    localStorage.setItem('siakad_user_v2', JSON.stringify(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('siakad_schedules', JSON.stringify(schedules));
+    localStorage.setItem('siakad_schedules_v2', JSON.stringify(schedules));
   }, [schedules]);
 
   useEffect(() => {
-    localStorage.setItem('siakad_tasks', JSON.stringify(tasks));
+    localStorage.setItem('siakad_tasks_v2', JSON.stringify(tasks));
   }, [tasks]);
 
   const handleLogin = (role: UserRole) => {

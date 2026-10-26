@@ -42,19 +42,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        <span className="text-gray-300 font-light text-xl select-none">|</span>
+        <span className="text-gray-300 font-light text-xl select-none mx-1">|</span>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-          <span className="text-xs sm:text-sm font-semibold text-gray-800 tracking-tight">
-            Selamat Datang, <strong className="text-red-700">{user.name.toUpperCase()}</strong>
+        <div className="flex flex-col">
+          <span className="text-xs sm:text-sm text-gray-800 tracking-tight">
+            Selamat Datang, <strong className="text-red-700 font-bold">{user.name.toUpperCase()}</strong>
           </span>
-          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full w-max ${
-            user.role === 'KETUA_KELAS' 
-              ? 'bg-amber-100 text-amber-800 border border-amber-300' 
-              : 'bg-blue-50 text-blue-700 border border-blue-200'
-          }`}>
-            {user.role === 'KETUA_KELAS' ? '👑 Ketua Kelas' : '🎓 Mahasiswa'}
-          </span>
+          <div className="mt-0.5">
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full w-max ${
+              user.role === 'KETUA_KELAS' 
+                ? 'bg-amber-50 text-amber-800 border border-amber-300' 
+                : 'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}>
+              {user.role === 'KETUA_KELAS' ? '👑 Ketua Kelas' : '🎓 Mahasiswa'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -62,12 +64,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
+          className="flex items-center p-1 rounded-full hover:bg-gray-50 transition-all focus:outline-none"
+          title="Menu Profil"
         >
-          <div className="w-8 h-8 rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
+          <div className="w-9 h-9 rounded-full bg-[#D32F2F] text-white font-bold flex items-center justify-center text-xs shadow-xs">
             IK
           </div>
-          <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:block" />
         </button>
 
         {/* Dropdown Menu */}
