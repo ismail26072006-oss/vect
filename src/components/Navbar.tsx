@@ -56,11 +56,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentClass && (
               <button
                 onClick={onSwitchClass}
-                className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
+                className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
                 title="Klik untuk ganti atau cek ruang kelas"
               >
                 <School className="w-3 h-3 text-emerald-600" />
                 <span>Kelas: {currentClass.code}</span>
+                {currentClass.nimRestriction?.enabled && (
+                  <span className="text-[9px] bg-emerald-200 text-emerald-900 px-1 py-0.2 rounded font-mono font-normal">
+                    🔒 {currentClass.nimRestriction.nimPrefix}...
+                  </span>
+                )}
                 <span className="text-[9px] bg-emerald-200 text-emerald-900 px-1 rounded ml-0.5">Ganti</span>
               </button>
             )}
@@ -77,6 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentClass && (
               <span className="sm:hidden inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
                 🏫 {currentClass.code}
+                {currentClass.nimRestriction?.enabled && ' (🔒 NIM)'}
               </span>
             )}
           </div>

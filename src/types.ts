@@ -18,6 +18,14 @@ export interface UserProfile {
   classCode?: string;
 }
 
+export interface NimRestriction {
+  enabled: boolean;
+  nimPrefix: string;      // 8-10 digit prefix angkatan/prodi (e.g. "04102425" or "5314240")
+  rangeStart: number;     // Starting individual student sequence number (e.g. 1)
+  rangeEnd: number;       // Ending individual student sequence number (e.g. 35)
+  digitLength: number;    // Length of sequence digits (e.g. 2 for "01-30" or 3 for "001-030")
+}
+
 export interface ClassInfo {
   code: string;
   name: string;
@@ -26,6 +34,7 @@ export interface ClassInfo {
   createdBy: string;
   creatorName: string;
   createdAt?: string;
+  nimRestriction?: NimRestriction;
 }
 
 export interface ToastNotification {

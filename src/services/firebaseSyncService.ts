@@ -22,8 +22,67 @@ export const DEFAULT_CLASS_INFO: ClassInfo = {
   angkatan: '2024',
   createdBy: '04102425006',
   creatorName: 'Ismail K. Zakaria',
-  createdAt: new Date().toISOString()
+  createdAt: new Date().toISOString(),
+  nimRestriction: {
+    enabled: true,
+    nimPrefix: '04102425',
+    rangeStart: 1,
+    rangeEnd: 40,
+    digitLength: 3
+  }
 };
+
+/**
+ * Validate whether a student's NIM is authorized to enter this class
+ */
+export function isNimAllowedInClass(
+  nim: string,
+  classInfo: ClassInfo
+): { allowed: boolean; reason?: string } {
+  if (!classInfo.nimRestriction || !classInfo.nimRestriction.enabled) {
+    return { allowed: true };
+  }
+
+  const { nimPrefix, rangeStart, rangeEnd, digitLength } = classInfo.nimRestriction;
+  const cleanNim = (nim || '').trim();
+  const cleanPrefix = (nimPrefix || '').trim();
+
+  // The class creator is always permitted
+  if (classInfo.createdBy && cleanNim === classInfo.createdBy.trim()) {
+    return { allowed: true };
+  }
+
+  // 1. Check fixed prefix (8-10 digit angkatan/prodi)
+  if (!cleanNim.startsWith(cleanPrefix)) {
+    return {
+      allowed: false,
+      reason: `NIM Anda (${cleanNim}) tidak sesuai dengan prefix NIM angkatan kelas ini (${cleanPrefix}...).`
+    };
+  }
+
+  // 2. Check student individual sequence number (1-3 digit) within interval
+  const suffixStr = cleanNim.slice(cleanPrefix.length);
+  const sequenceNum = parseInt(suffixStr, 10);
+
+  if (isNaN(sequenceNum)) {
+    return {
+      allowed: false,
+      reason: `Digit nomor urut pada NIM Anda (${suffixStr}) tidak valid.`
+    };
+  }
+
+  if (sequenceNum < rangeStart || sequenceNum > rangeEnd) {
+    const padLen = digitLength || Math.max(suffixStr.length, 2);
+    const startFmt = String(rangeStart).padStart(padLen, '0');
+    const endFmt = String(rangeEnd).padStart(padLen, '0');
+    return {
+      allowed: false,
+      reason: `Akses ditolak: Nomor urut NIM Anda (${suffixStr}) berada di luar rentang yang diizinkan untuk kelas ini (${cleanPrefix}${startFmt} s/d ${cleanPrefix}${endFmt}). Hubungi Ketua Kelas jika ada kekeliruan.`
+    };
+  }
+
+  return { allowed: true };
+}
 
 /**
  * Verify whether a class code exists in Firestore or locally
