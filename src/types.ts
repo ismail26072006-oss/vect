@@ -15,6 +15,26 @@ export interface UserProfile {
   sksSelesai: number;
   sksTotal: number;
   tunggakan: number;
+  classCode?: string;
+}
+
+export interface ClassInfo {
+  code: string;
+  name: string;
+  prodi: string;
+  angkatan: string;
+  createdBy: string;
+  creatorName: string;
+  createdAt?: string;
+}
+
+export interface ToastNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'urgent';
+  timestamp: number;
+  taskId?: string;
 }
 
 export interface CourseSchedule {

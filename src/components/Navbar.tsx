@@ -1,21 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UserProfile, UserRole } from '../types';
-import { Menu, ChevronDown, User, LogOut, Shield, Check, School } from 'lucide-react';
+import { UserProfile, UserRole, ClassInfo } from '../types';
+import { Menu, ChevronDown, User, LogOut, Shield, Check, School, RefreshCw, KeyRound } from 'lucide-react';
 
 interface NavbarProps {
   user: UserProfile;
+  currentClass: ClassInfo | null;
   onToggleSidebar: () => void;
   onRoleChange: (newRole: UserRole) => void;
   onLogout: () => void;
   onOpenBiodata: () => void;
+  onSwitchClass: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   user,
+  currentClass,
   onToggleSidebar,
   onRoleChange,
   onLogout,
   onOpenBiodata,
+  onSwitchClass,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -33,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-xs">
       {/* Left section: Hamburger [=] | Selamat Datang */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 sm:gap-3">
         <button
           onClick={onToggleSidebar}
           className="p-1.5 rounded-md hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none"
@@ -42,13 +46,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        <span className="text-gray-300 font-light text-xl select-none mx-1">|</span>
+        <span className="text-gray-300 font-light text-xl select-none hidden xs:inline">|</span>
 
         <div className="flex flex-col">
-          <span className="text-xs sm:text-sm text-gray-800 tracking-tight">
-            Selamat Datang, <strong className="text-red-700 font-bold">{user.name.toUpperCase()}</strong>
-          </span>
-          <div className="mt-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs sm:text-sm text-gray-800 tracking-tight">
+              Selamat Datang, <strong className="text-red-700 font-bold">{user.name.toUpperCase()}</strong>
+            </span>
+            {currentClass && (
+              <button
+                onClick={onSwitchClass}
+                className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
+                title="Klik untuk ganti atau cek ruang kelas"
+              >
+                <School className="w-3 h-3 text-emerald-600" />
+                <span>Kelas: {currentClass.code}</span>
+                <span className="text-[9px] bg-emerald-200 text-emerald-900 px-1 rounded ml-0.5">Ganti</span>
+              </button>
+            )}
+          </div>
+          <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full w-max ${
               user.role === 'KETUA_KELAS' 
                 ? 'bg-amber-50 text-amber-800 border border-amber-300' 
@@ -56,6 +73,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}>
               {user.role === 'KETUA_KELAS' ? '👑 Ketua Kelas' : '🎓 Mahasiswa'}
             </span>
+
+            {currentClass && (
+              <span className="sm:hidden inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
+                🏫 {currentClass.code}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -119,6 +142,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="py-1">
+              {currentClass && (
+                <button
+                  onClick={() => {
+                    onSwitchClass();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <School className="w-4 h-4 text-emerald-600" />
+                    <span>Ruang Kelas: <strong>{currentClass.code}</strong></span>
+                  </div>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Ganti</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   onOpenBiodata();

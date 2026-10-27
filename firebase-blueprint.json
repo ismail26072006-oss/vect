@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Class": {
+      "path": "classes/{classId}",
+      "fields": {
+        "code": "string",
+        "name": "string",
+        "prodi": "string",
+        "angkatan": "string",
+        "createdBy": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "Task": {
+      "path": "classes/{classId}/tasks/{taskId}",
+      "fields": {
+        "title": "string",
+        "description": "string",
+        "courseName": "string",
+        "category": "string",
+        "dueDate": "string",
+        "dueTime": "string",
+        "priority": "string",
+        "isCompleted": "boolean",
+        "isClassTask": "boolean",
+        "createdBy": "string",
+        "createdAt": "string"
+      }
+    },
+    "Schedule": {
+      "path": "classes/{classId}/schedules/{scheduleId}",
+      "fields": {
+        "courseName": "string",
+        "courseCode": "string",
+        "dayOfWeek": "string",
+        "startTime": "string",
+        "endTime": "string",
+        "room": "string",
+        "lecturer": "string",
+        "sks": "number"
+      }
+    },
+    "User": {
+      "path": "users/{userId}",
+      "fields": {
+        "nim": "string",
+        "name": "string",
+        "email": "string",
+        "role": "string",
+        "prodi": "string",
+        "classCode": "string"
+      }
+    }
+  }
+}
