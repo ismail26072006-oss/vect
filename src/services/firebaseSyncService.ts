@@ -124,11 +124,10 @@ export async function verifyClassCode(code: string): Promise<{ exists: boolean; 
 
 /**
  * Create a new class in Firestore (for Ketua Kelas)
+ * Newly created classes start completely clean and empty with NO dummy tasks or schedules
  */
 export async function createNewClass(
-  classInfo: ClassInfo,
-  initialScheds: CourseSchedule[] = initialSchedules,
-  initialTsk: TaskItem[] = initialTasks
+  classInfo: ClassInfo
 ): Promise<boolean> {
   const code = classInfo.code.trim().toUpperCase();
 
@@ -141,16 +140,7 @@ export async function createNewClass(
       createdAt: new Date().toISOString(),
       updatedAt: serverTimestamp()
     });
-
-    // Seed default tasks and schedules for this new class
-    for (const task of initialTsk) {
-      const taskRef = doc(db, 'classes', code, 'tasks', task.id);
-      await setDoc(taskRef, task);
-    }
-    for (const sched of initialScheds) {
-      const schedRef = doc(db, 'classes', code, 'schedules', sched.id);
-      await setDoc(schedRef, sched);
-    }
+    // Newly created class remains completely EMPTY - ready for the Ketua Kelas to add their own MK & tasks
   } catch (err) {
     console.warn('Firestore createNewClass offline or permission error, caching locally:', err);
   }
@@ -190,20 +180,33 @@ export function subscribeToClassTasks(
           });
           onTasksUpdated(list);
         } else {
-          // If empty in Firestore, seed fallback tasks once
-          seedDefaultClassTasks(code, fallbackTasks);
-          onTasksUpdated(fallbackTasks);
+          // Only seed initial sample data for the default demo class PTI-2024A
+          if (code === DEFAULT_CLASS_CODE) {
+            seedDefaultClassTasks(code, fallbackTasks);
+            onTasksUpdated(fallbackTasks);
+          } else {
+            // Newly created classes start completely empty
+            onTasksUpdated([]);
+          }
         }
       },
       (error) => {
-        console.warn('Real-time tasks onSnapshot error (using cached tasks):', error);
-        onTasksUpdated(fallbackTasks);
+        console.warn('Real-time tasks onSnapshot error:', error);
+        if (code === DEFAULT_CLASS_CODE) {
+          onTasksUpdated(fallbackTasks);
+        } else {
+          onTasksUpdated([]);
+        }
       }
     );
     return unsubscribe;
   } catch (err) {
     console.warn('Failed to attach tasks snapshot listener:', err);
-    onTasksUpdated(fallbackTasks);
+    if (code === DEFAULT_CLASS_CODE) {
+      onTasksUpdated(fallbackTasks);
+    } else {
+      onTasksUpdated([]);
+    }
     return () => {};
   }
 }
@@ -230,19 +233,33 @@ export function subscribeToClassSchedules(
           });
           onSchedulesUpdated(list);
         } else {
-          seedDefaultClassSchedules(code, fallbackSchedules);
-          onSchedulesUpdated(fallbackSchedules);
+          // Only seed initial sample data for the default demo class PTI-2024A
+          if (code === DEFAULT_CLASS_CODE) {
+            seedDefaultClassSchedules(code, fallbackSchedules);
+            onSchedulesUpdated(fallbackSchedules);
+          } else {
+            // Newly created classes start completely empty
+            onSchedulesUpdated([]);
+          }
         }
       },
       (error) => {
-        console.warn('Real-time schedules onSnapshot error (using cached schedules):', error);
-        onSchedulesUpdated(fallbackSchedules);
+        console.warn('Real-time schedules onSnapshot error:', error);
+        if (code === DEFAULT_CLASS_CODE) {
+          onSchedulesUpdated(fallbackSchedules);
+        } else {
+          onSchedulesUpdated([]);
+        }
       }
     );
     return unsubscribe;
   } catch (err) {
     console.warn('Failed to attach schedules snapshot listener:', err);
-    onSchedulesUpdated(fallbackSchedules);
+    if (code === DEFAULT_CLASS_CODE) {
+      onSchedulesUpdated(fallbackSchedules);
+    } else {
+      onSchedulesUpdated([]);
+    }
     return () => {};
   }
 }

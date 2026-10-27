@@ -3,11 +3,13 @@ import { UserRole } from '../types';
 import { ShieldCheck, Lock, User, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface LoginScreenProps {
-  onLogin: (role: UserRole) => void;
+  onLogin: (role: UserRole, nim: string, studentName?: string) => void;
+  defaultNim?: string;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
-  const [nim, setNim] = useState('04102425006');
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, defaultNim = '04102425006' }) => {
+  const [nim, setNim] = useState(defaultNim);
+  const [studentName, setStudentName] = useState('');
   const [password, setPassword] = useState('••••••••••');
   const [role, setRole] = useState<UserRole>('KETUA_KELAS');
   const [isHumanVerified, setIsHumanVerified] = useState(true);
@@ -15,11 +17,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanNim = nim.trim() || '04102425006';
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onLogin(role);
-    }, 400);
+      onLogin(role, cleanNim, studentName.trim() || undefined);
+    }, 350);
   };
 
   return (
@@ -95,9 +98,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
             {/* NIM Field */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                Nomor Induk Mahasiswa (NIM)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-gray-700">
+                  Nomor Induk Mahasiswa (NIM)
+                </label>
+                <span className="text-[10px] text-gray-400 font-mono">
+                  {nim.length} digit
+                </span>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <User className="w-4 h-4" />
@@ -105,11 +113,65 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 <input
                   type="text"
                   value={nim}
-                  onChange={(e) => setNim(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono"
+                  onChange={(e) => setNim(e.target.value.replace(/\s+/g, ''))}
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono font-bold text-gray-800 tracking-wide"
                   placeholder="Contoh: 04102425006"
                   required
                 />
+              </div>
+
+              {/* Quick Preset Selector for Testing */}
+              <div className="mt-2 space-y-1">
+                <span className="text-[10px] text-gray-400 block font-medium">
+                  Cepat Pilih Akun Simulasi / Uji Coba:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNim('04102425006');
+                      setRole('KETUA_KELAS');
+                      setStudentName('Ismail K. Zakaria');
+                    }}
+                    className={`text-[10px] font-mono px-2 py-1 rounded border transition-all ${
+                      nim === '04102425006'
+                        ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold'
+                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    👑 04102425006 (Admin / Ketua)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNim('04102425015');
+                      setRole('MAHASISWA');
+                      setStudentName('Rizky Pratama');
+                    }}
+                    className={`text-[10px] font-mono px-2 py-1 rounded border transition-all ${
+                      nim === '04102425015'
+                        ? 'bg-blue-100 border-blue-400 text-blue-900 font-bold'
+                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    🎓 04102425015 (Urut 15)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNim('04102425088');
+                      setRole('MAHASISWA');
+                      setStudentName('Budi Santoso');
+                    }}
+                    className={`text-[10px] font-mono px-2 py-1 rounded border transition-all ${
+                      nim === '04102425088'
+                        ? 'bg-red-100 border-red-400 text-red-900 font-bold'
+                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    ⚠️ 04102425088 (Urut 88)
+                  </button>
+                </div>
               </div>
             </div>
 

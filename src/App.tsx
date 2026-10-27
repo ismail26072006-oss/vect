@@ -15,6 +15,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { BiodataView } from './components/BiodataView';
+import { TambahBiodataView } from './components/TambahBiodataView';
 import { ToastContainer } from './components/ToastContainer';
 import {
   subscribeToClassTasks,
@@ -25,7 +26,8 @@ import {
   syncToggleTask,
   syncAddSchedule,
   syncDeleteSchedule,
-  DEFAULT_CLASS_INFO
+  DEFAULT_CLASS_INFO,
+  isNimAllowedInClass
 } from './services/firebaseSyncService';
 
 export function App() {
@@ -191,10 +193,40 @@ export function App() {
   }, [tasks, notifiedTaskIds]);
 
   // Auth & Class Handlers
-  const handleLogin = (role: UserRole) => {
-    setCurrentUser((prev) => ({ ...prev, role }));
+  const handleLogin = (role: UserRole, enteredNim: string, studentName?: string) => {
+    const trimmedNim = enteredNim.trim() || '04102425006';
+    
+    // Check if we have registered student details in database
+    let resolvedName = studentName;
+    try {
+      const savedStudents = localStorage.getItem('siakad_registered_students');
+      if (savedStudents) {
+        const parsed: UserProfile[] = JSON.parse(savedStudents);
+        const match = parsed.find((s) => s.nim === trimmedNim);
+        if (match && !resolvedName) {
+          resolvedName = match.name;
+        }
+      }
+    } catch (e) {}
+
+    const updatedUser: UserProfile = {
+      ...currentUser,
+      nim: trimmedNim,
+      role: role,
+      name: resolvedName 
+        ? resolvedName 
+        : trimmedNim === '04102425006'
+        ? 'Ismail K. Zakaria'
+        : `Mahasiswa (${trimmedNim})`,
+      email: `${trimmedNim}@mahasiswa.ung.ac.id`,
+      classCode: undefined
+    };
+
+    setCurrentUser(updatedUser);
+    localStorage.setItem('siakad_user_v2', JSON.stringify(updatedUser));
     setIsLoggedIn(true);
-    // Force Class Gate Screen after login
+
+    // Force Class Gate Screen after login so the user enters class code with the updated NIM
     setCurrentClass(null);
   };
 
@@ -203,7 +235,40 @@ export function App() {
     setCurrentClass(null);
   };
 
+  /**
+   * Enhanced handleClassJoined:
+   * Validates personal NIM against the class's NIM Prefix and Range restriction.
+   * If unauthorized, displays a toast warning and blocks entry.
+   * If joining a newly created custom class, resets tasks & schedules to empty.
+   */
   const handleClassJoined = (classInfo: ClassInfo) => {
+    // 1. Validation check against NIM Prefix and NIM Range
+    const nimCheck = isNimAllowedInClass(currentUser.nim, classInfo);
+    if (!nimCheck.allowed) {
+      const warningToast: ToastNotification = {
+        id: 'toast-nim-unauthorized-' + Date.now(),
+        title: '⛔ Peringatan: NIM Tidak Diizinkan',
+        message: nimCheck.reason || `NIM Anda (${currentUser.nim}) tidak memenuhi syarat rentang NIM untuk kelas ${classInfo.name}. Hubungi Ketua Kelas untuk konfirmasi.`,
+        type: 'urgent',
+        timestamp: Date.now()
+      };
+      setNotifications((prev) => [warningToast, ...prev]);
+      return;
+    }
+
+    // 2. Class content isolation:
+    // If it's a newly created custom class, start with completely EMPTY schedules & tasks!
+    if (classInfo.code !== currentClass?.code) {
+      if (classInfo.code === 'PTI-2024A') {
+        setSchedules(initialSchedules);
+        setTasks(initialTasks);
+      } else {
+        // Newly created class starts completely empty
+        setSchedules([]);
+        setTasks([]);
+      }
+    }
+
     setCurrentClass(classInfo);
     setCurrentUser((prev) => ({ ...prev, classCode: classInfo.code }));
 
@@ -312,14 +377,13 @@ export function App() {
   const handleToastAction = (taskId?: string) => {
     setCurrentPage('dashboard');
     if (taskId) {
-      // Find element if visible or toast dismissed
       handleDismissToast('toast-' + taskId);
     }
   };
 
-  // STEP 1: Not Logged In -> Show Login Screen (Differentiating Ketua Kelas & Mahasiswa)
+  // STEP 1: Not Logged In -> Show Login Screen (Differentiating Ketua Kelas & Mahasiswa + NIM input)
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return <LoginScreen onLogin={handleLogin} defaultNim={currentUser.nim} />;
   }
 
   // STEP 2: Logged In, but No Class Chosen -> Show Class Gate Screen (Enter Class Code / Create Class)
@@ -388,7 +452,17 @@ export function App() {
             />
           )}
 
-          {currentPage !== 'dashboard' && currentPage !== 'biodata' && (
+          {(currentPage === 'tambah_biodata' || currentPage === 'decision') && (
+            <TambahBiodataView
+              currentUser={currentUser}
+              onBack={() => setCurrentPage('dashboard')}
+            />
+          )}
+
+          {currentPage !== 'dashboard' && 
+           currentPage !== 'biodata' && 
+           currentPage !== 'tambah_biodata' && 
+           currentPage !== 'decision' && (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center max-w-2xl mx-auto space-y-3">
               <h2 className="text-base font-bold text-gray-800 capitalize">
                 Menu {currentPage}

@@ -62,6 +62,13 @@ export const ClassGateScreen: React.FC<ClassGateScreenProps> = ({
   const [rangeEnd, setRangeEnd] = useState<number | string>(35);
   const [digitLength, setDigitLength] = useState<number>(3); // 2 or 3 digits (e.g. 01 vs 001)
 
+  // Sync prefix when user NIM changes
+  useEffect(() => {
+    if (user.nim && user.nim.length >= 8) {
+      setNimPrefix(user.nim.slice(0, user.nim.length - 3));
+    }
+  }, [user.nim]);
+
   // Generate random class code
   const handleGenerateCode = () => {
     const randomNum = Math.floor(1000 + Math.random() * 9000);

@@ -9,7 +9,7 @@ import {
   Laptop, 
   Award, 
   FileText, 
-  PieChart, 
+  UserPlus, 
   HelpCircle,
   X
 } from 'lucide-react';
@@ -30,13 +30,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { id: 'dashboard' as NavPage, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'biodata' as NavPage, label: 'Biodata Mahasiswa', icon: User },
+    { id: 'tambah_biodata' as NavPage, label: 'Penambahan Biodata', icon: UserPlus, isAdminOnly: true },
     { id: 'kurikulum' as NavPage, label: 'Kurikulum', icon: BookOpen },
     { id: 'biaya' as NavPage, label: 'Biaya Kuliah', icon: CreditCard },
     { id: 'perkuliahan' as NavPage, label: 'Perkuliahan', icon: GraduationCap },
     { id: 'elearning' as NavPage, label: 'E-Learning', icon: Laptop },
     { id: 'mbkm' as NavPage, label: 'MBKM', icon: Award },
     { id: 'kuesioner' as NavPage, label: 'Kuesioner', icon: FileText },
-    { id: 'decision' as NavPage, label: 'Decision Support', icon: PieChart },
     { id: 'bantuan' as NavPage, label: 'Butuh Bantuan', icon: HelpCircle },
   ];
 
@@ -97,7 +97,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-red-600' : 'text-gray-400'}`} />
-                <span>{item.label}</span>
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.isAdminOnly && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-red-100 text-red-800">
+                    Admin
+                  </span>
+                )}
               </button>
             );
           })}

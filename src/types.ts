@@ -81,6 +81,7 @@ export type DashboardTab = 'semua' | 'jadwal' | 'tugas' | 'kalender';
 export type NavPage = 
   | 'dashboard' 
   | 'biodata' 
+  | 'tambah_biodata'
   | 'kurikulum' 
   | 'biaya' 
   | 'perkuliahan' 
