@@ -3,6 +3,7 @@ import { NavPage } from '../types';
 import { 
   LayoutDashboard, 
   User, 
+  Users,
   BookOpen, 
   CreditCard, 
   GraduationCap, 
@@ -29,6 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'dashboard' as NavPage, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'anggota_kelas' as NavPage, label: 'Anggota Kelas', icon: Users },
     { id: 'biodata' as NavPage, label: 'Biodata Mahasiswa', icon: User },
     { id: 'tambah_biodata' as NavPage, label: 'Penambahan Biodata', icon: UserPlus, isAdminOnly: true },
     { id: 'kurikulum' as NavPage, label: 'Kurikulum', icon: BookOpen },

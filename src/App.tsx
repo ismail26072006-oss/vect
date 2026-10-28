@@ -16,6 +16,7 @@ import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { BiodataView } from './components/BiodataView';
 import { TambahBiodataView } from './components/TambahBiodataView';
+import { AnggotaKelasView } from './components/AnggotaKelasView';
 import { ToastContainer } from './components/ToastContainer';
 import {
   subscribeToClassTasks,
@@ -27,7 +28,8 @@ import {
   syncAddSchedule,
   syncDeleteSchedule,
   DEFAULT_CLASS_INFO,
-  isNimAllowedInClass
+  isNimAllowedInClass,
+  recordClassMember
 } from './services/firebaseSyncService';
 
 export function App() {
@@ -272,6 +274,15 @@ export function App() {
     setCurrentClass(classInfo);
     setCurrentUser((prev) => ({ ...prev, classCode: classInfo.code }));
 
+    // Record user as an active member of this class in Firebase
+    recordClassMember(classInfo.code, {
+      nim: currentUser.nim,
+      name: currentUser.name,
+      role: currentUser.role,
+      prodi: currentUser.prodi,
+      joinedAt: new Date().toISOString()
+    });
+
     // Show success toast
     const successToast: ToastNotification = {
       id: 'toast-class-' + Date.now(),
@@ -442,6 +453,7 @@ export function App() {
               onAddSchedule={handleAddSchedule}
               onDeleteSchedule={handleDeleteSchedule}
               onOpenBiodata={() => setCurrentPage('biodata')}
+              onOpenAnggota={() => setCurrentPage('anggota_kelas')}
             />
           )}
 
@@ -459,10 +471,19 @@ export function App() {
             />
           )}
 
+          {currentPage === 'anggota_kelas' && currentClass && (
+            <AnggotaKelasView
+              classInfo={currentClass}
+              currentUser={currentUser}
+              onBack={() => setCurrentPage('dashboard')}
+            />
+          )}
+
           {currentPage !== 'dashboard' && 
            currentPage !== 'biodata' && 
            currentPage !== 'tambah_biodata' && 
-           currentPage !== 'decision' && (
+           currentPage !== 'decision' && 
+           currentPage !== 'anggota_kelas' && (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center max-w-2xl mx-auto space-y-3">
               <h2 className="text-base font-bold text-gray-800 capitalize">
                 Menu {currentPage}

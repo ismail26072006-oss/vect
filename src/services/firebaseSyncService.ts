@@ -10,7 +10,7 @@ import {
   deleteDoc,
   serverTimestamp
 } from '../firebase';
-import { TaskItem, CourseSchedule, ClassInfo, UserProfile } from '../types';
+import { TaskItem, CourseSchedule, ClassInfo, UserProfile, ClassMember } from '../types';
 import { initialSchedules, initialTasks } from '../data/initialData';
 
 const DEFAULT_CLASS_CODE = 'PTI-2024A';
@@ -352,5 +352,137 @@ export async function syncDeleteSchedule(classCode: string, scheduleId: string) 
     await deleteDoc(docRef);
   } catch (e) {
     console.warn('Firestore deleteSchedule sync error:', e);
+  }
+}
+
+export const DEFAULT_CLASS_MEMBERS: ClassMember[] = [
+  {
+    nim: '04102425006',
+    name: 'Ismail K. Zakaria',
+    role: 'KETUA_KELAS',
+    prodi: 'Pendidikan Teknologi Informasi',
+    joinedAt: new Date(Date.now() - 86400000 * 7).toISOString()
+  },
+  {
+    nim: '04102425015',
+    name: 'Rizky Pratama',
+    role: 'MAHASISWA',
+    prodi: 'Pendidikan Teknologi Informasi',
+    joinedAt: new Date(Date.now() - 86400000 * 3).toISOString()
+  },
+  {
+    nim: '04102425022',
+    name: 'Siti Nurhaliza',
+    role: 'MAHASISWA',
+    prodi: 'Pendidikan Teknologi Informasi',
+    joinedAt: new Date(Date.now() - 86400000 * 1).toISOString()
+  }
+];
+
+/**
+ * Record a student joining a class into Firestore / local cache
+ */
+export async function recordClassMember(classCode: string, member: ClassMember) {
+  const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
+  try {
+    const memberRef = doc(db, 'classes', code, 'members', member.nim);
+    await setDoc(memberRef, {
+      ...member,
+      lastActive: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.warn('Firestore recordClassMember offline error:', e);
+  }
+
+  // Also cache in localStorage for instant access
+  try {
+    const key = `siakad_members_${code}`;
+    const saved = localStorage.getItem(key);
+    const list: ClassMember[] = saved ? JSON.parse(saved) : (code === DEFAULT_CLASS_CODE ? [...DEFAULT_CLASS_MEMBERS] : []);
+    const existingIndex = list.findIndex((m) => m.nim === member.nim);
+    if (existingIndex >= 0) {
+      list[existingIndex] = { ...list[existingIndex], ...member };
+    } else {
+      list.push(member);
+    }
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (err) {
+    console.error('Local member cache error:', err);
+  }
+}
+
+/**
+ * Remove a student from class (Ketua Kelas action)
+ */
+export async function removeClassMember(classCode: string, memberNim: string) {
+  const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
+  try {
+    const memberRef = doc(db, 'classes', code, 'members', memberNim);
+    await deleteDoc(memberRef);
+  } catch (e) {
+    console.warn('Firestore removeClassMember error:', e);
+  }
+
+  try {
+    const key = `siakad_members_${code}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const list: ClassMember[] = JSON.parse(saved);
+      const filtered = list.filter((m) => m.nim !== memberNim);
+      localStorage.setItem(key, JSON.stringify(filtered));
+    }
+  } catch (err) {}
+}
+
+/**
+ * Subscribe in real-time to the roster of students in a class
+ */
+export function subscribeToClassMembers(
+  classCode: string,
+  onMembersUpdated: (members: ClassMember[]) => void
+): () => void {
+  const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
+
+  // Local fallback
+  const getLocalMembers = (): ClassMember[] => {
+    try {
+      const key = `siakad_members_${code}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return code === DEFAULT_CLASS_CODE ? DEFAULT_CLASS_MEMBERS : [];
+  };
+
+  try {
+    const membersCollRef = collection(db, 'classes', code, 'members');
+    const unsubscribe = onSnapshot(
+      membersCollRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const membersList: ClassMember[] = [];
+          snapshot.forEach((d) => {
+            membersList.push(d.data() as ClassMember);
+          });
+          onMembersUpdated(membersList);
+        } else {
+          // If empty and default demo class, seed default members
+          if (code === DEFAULT_CLASS_CODE) {
+            DEFAULT_CLASS_MEMBERS.forEach((m) => recordClassMember(code, m));
+            onMembersUpdated(DEFAULT_CLASS_MEMBERS);
+          } else {
+            onMembersUpdated(getLocalMembers());
+          }
+        }
+      },
+      (error) => {
+        console.warn('Real-time class members onSnapshot fallback to local:', error);
+        onMembersUpdated(getLocalMembers());
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.warn('Failed to attach class members listener:', err);
+    onMembersUpdated(getLocalMembers());
+    return () => {};
   }
 }

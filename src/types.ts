@@ -78,10 +78,20 @@ export interface TaskItem {
 
 export type DashboardTab = 'semua' | 'jadwal' | 'tugas' | 'kalender';
 
+export interface ClassMember {
+  nim: string;
+  name: string;
+  role: UserRole;
+  prodi: string;
+  joinedAt: string;
+  avatar?: string;
+}
+
 export type NavPage = 
   | 'dashboard' 
   | 'biodata' 
   | 'tambah_biodata'
+  | 'anggota_kelas'
   | 'kurikulum' 
   | 'biaya' 
   | 'perkuliahan' 

@@ -29,6 +29,7 @@ import {
   Share2,
   Check,
   Tag,
+  Users,
   X
 } from 'lucide-react';
 import { TaskStats } from './TaskStats';
@@ -96,6 +97,7 @@ interface DashboardViewProps {
   onAddSchedule: (schedule: Omit<CourseSchedule, 'id'>) => void;
   onDeleteSchedule: (id: string) => void;
   onOpenBiodata: () => void;
+  onOpenAnggota?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -109,6 +111,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onAddSchedule,
   onDeleteSchedule,
   onOpenBiodata,
+  onOpenAnggota,
 }) => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('semua');
   const [selectedDay, setSelectedDay] = useState<string>('Senin');
@@ -298,16 +301,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-4 max-w-2xl mx-auto pb-12">
       {/* 1. Red Header Container (Dashboard) */}
       <div className="bg-[#D32F2F] text-white rounded-2xl shadow-sm p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xl select-none">
-            Σ
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xl select-none">
+              Σ
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Vectoreal Education</h1>
+              <p className="text-xs text-white/90 font-medium">
+                Manajemen Tugas & Jadwal Perkuliahan
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Vectoreal Education</h1>
-            <p className="text-xs text-white/90 font-medium">
-              Manajemen Tugas & Jadwal Perkuliahan
-            </p>
-          </div>
+
+          {onOpenAnggota && (
+            <button
+              onClick={onOpenAnggota}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition-all shadow-2xs backdrop-blur-md shrink-0"
+              title="Lihat daftar mahasiswa yang sudah bergabung ke kelas ini"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Anggota Kelas</span>
+            </button>
+          )}
         </div>
 
         {/* 4 Tabs: Semua, Jadwal MK, Tugas, Kalender (All in 1 row without sliding) */}
