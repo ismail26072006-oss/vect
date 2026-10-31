@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UserProfile, UserRole, ClassInfo } from '../types';
-import { Menu, ChevronDown, User, LogOut, Shield, Check, School, RefreshCw, KeyRound } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, Shield, Check, School, RefreshCw, KeyRound, RotateCcw } from 'lucide-react';
 
 interface NavbarProps {
   user: UserProfile;
   currentClass: ClassInfo | null;
   onToggleSidebar: () => void;
-  onRoleChange: (newRole: UserRole) => void;
+  onRoleChange?: (newRole: UserRole) => void;
   onLogout: () => void;
   onOpenBiodata: () => void;
   onSwitchClass: () => void;
+  onResetData?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenBiodata,
   onSwitchClass,
+  onResetData,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -148,6 +150,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <User className="w-4 h-4 text-gray-400" />
                 <span>Biodata Mahasiswa (PDDikti)</span>
               </button>
+              {onResetData && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Bersihkan dan reset semua data lokal sekarang?')) {
+                      onResetData();
+                      setShowDropdown(false);
+                    }
+                  }}
+                  className="w-full px-4 py-2 text-left text-amber-700 hover:bg-amber-50 flex items-center gap-2 border-t border-gray-100"
+                >
+                  <RotateCcw className="w-4 h-4 text-amber-600" />
+                  <span>Reset & Bersihkan Data</span>
+                </button>
+              )}
               <button
                 onClick={onLogout}
                 className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"

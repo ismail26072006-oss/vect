@@ -342,24 +342,10 @@ export async function syncDeleteSchedule(classCode: string, scheduleId: string) 
 export const DEFAULT_CLASS_MEMBERS: ClassMember[] = [
   {
     nim: '04102425006',
-    name: 'Ismail K. Zakaria',
+    name: 'ISMAIL K. ZAKARIA',
     role: 'KETUA_KELAS',
-    prodi: 'Pendidikan Teknologi Informasi',
-    joinedAt: new Date(Date.now() - 86400000 * 7).toISOString()
-  },
-  {
-    nim: '04102425015',
-    name: 'Rizky Pratama',
-    role: 'MAHASISWA',
-    prodi: 'Pendidikan Teknologi Informasi',
-    joinedAt: new Date(Date.now() - 86400000 * 3).toISOString()
-  },
-  {
-    nim: '04102425022',
-    name: 'Siti Nurhaliza',
-    role: 'MAHASISWA',
-    prodi: 'Pendidikan Teknologi Informasi',
-    joinedAt: new Date(Date.now() - 86400000 * 1).toISOString()
+    prodi: 'S1 MATEMATIKA',
+    joinedAt: new Date().toISOString()
   }
 ];
 

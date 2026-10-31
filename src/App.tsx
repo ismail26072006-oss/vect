@@ -33,6 +33,17 @@ import {
   recordClassMember
 } from './services/firebaseSyncService';
 
+// Auto-reset all data on first load to pristine clean state
+const SYSTEM_WIPE_VERSION = '2026_10_31_clean_final_v10';
+if (typeof window !== 'undefined') {
+  if (localStorage.getItem('siakad_clean_version') !== SYSTEM_WIPE_VERSION) {
+    try {
+      localStorage.clear();
+      localStorage.setItem('siakad_clean_version', SYSTEM_WIPE_VERSION);
+    } catch (e) {}
+  }
+}
+
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const saved = localStorage.getItem('siakad_logged_in_v2');
@@ -456,9 +467,40 @@ export function App() {
     }
   };
 
+  /**
+   * Reset & Clean All Data:
+   * Clears localStorage and resets application state to completely clean state
+   */
+  const handleResetAllData = () => {
+    try {
+      localStorage.clear();
+      localStorage.setItem('siakad_clean_version', SYSTEM_WIPE_VERSION);
+    } catch (e) {}
+    setIsLoggedIn(false);
+    setCurrentClass(null);
+    setCurrentUser(initialUser);
+    setTasks([]);
+    setSchedules([]);
+    setNotifications([
+      {
+        id: 'toast-reset-' + Date.now(),
+        title: '🧹 Sistem Berhasil Dibersihkan',
+        message: 'Seluruh cache dan data berhasil direset. Aplikasi bersih dan siap digunakan.',
+        type: 'success',
+        timestamp: Date.now()
+      }
+    ]);
+  };
+
   // STEP 1: Not Logged In -> Show Login Screen (Differentiating Ketua Kelas & Mahasiswa + NIM input)
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} defaultNim={currentUser.nim} />;
+    return (
+      <LoginScreen 
+        onLogin={handleLogin} 
+        defaultNim={currentUser.nim} 
+        onResetData={handleResetAllData}
+      />
+    );
   }
 
   // STEP 2: Logged In, but No Class Chosen -> Show Class Gate Screen (Enter Class Code / Create Class)
@@ -501,6 +543,7 @@ export function App() {
           onLogout={handleLogout}
           onOpenBiodata={() => setCurrentPage('biodata')}
           onSwitchClass={handleSwitchClass}
+          onResetData={handleResetAllData}
         />
 
         {/* Content Body */}

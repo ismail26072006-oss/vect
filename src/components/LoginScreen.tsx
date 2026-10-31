@@ -14,7 +14,8 @@ import {
   UserCheck,
   User,
   Trash2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  RotateCcw
 } from 'lucide-react';
 
 export interface DeviceAccount {
@@ -31,11 +32,13 @@ export interface DeviceAccount {
 interface LoginScreenProps {
   onLogin: (role: UserRole, nim: string, studentName?: string) => void;
   defaultNim?: string;
+  onResetData?: () => void;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ 
   onLogin, 
-  defaultNim = '04102425006' 
+  defaultNim = '04102425006',
+  onResetData
 }) => {
   // Load previously logged-in accounts on THIS device only (No dummy/unregistered names)
   const [deviceAccounts, setDeviceAccounts] = useState<DeviceAccount[]>(() => {
@@ -562,13 +565,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       {/* Footer */}
-      <footer className="text-center text-xs text-gray-400 mt-4 space-y-0.5">
+      <footer className="text-center text-xs text-gray-400 mt-4 space-y-1">
         <p className="font-medium text-gray-500">
           Vectoreal Education • Universitas Negeri Gorontalo
         </p>
         <p className="text-[11px]">
           Sistem Terintegrasi Pangkalan Data Pendidikan Tinggi (PDDikti)
         </p>
+
+        {onResetData && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Bersihkan semua cache dan reset data awal aplikasi?')) {
+                  onResetData();
+                }
+              }}
+              className="text-[11px] font-semibold text-gray-400 hover:text-red-600 transition-colors inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-gray-100 border border-transparent hover:border-gray-200"
+              title="Bersihkan semua cache dan data lokal"
+            >
+              <RotateCcw className="w-3 h-3 text-gray-400" />
+              <span>Bersihkan & Reset Data Aplikasi</span>
+            </button>
+          </div>
+        )}
       </footer>
     </div>
   );
