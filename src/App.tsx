@@ -218,7 +218,7 @@ export function App() {
       name: resolvedName 
         ? resolvedName 
         : trimmedNim === '04102425006'
-        ? 'Ismail K. Zakaria'
+        ? 'ISMAIL K. ZAKARIA'
         : `Mahasiswa (${trimmedNim})`,
       email: `${trimmedNim}@mahasiswa.ung.ac.id`,
       classCode: undefined
@@ -227,6 +227,26 @@ export function App() {
     setCurrentUser(updatedUser);
     localStorage.setItem('siakad_user_v2', JSON.stringify(updatedUser));
     setIsLoggedIn(true);
+
+    // Save to device logged accounts on this device only
+    try {
+      const savedAccounts = localStorage.getItem('siakad_device_logged_accounts');
+      const accounts = savedAccounts ? JSON.parse(savedAccounts) : [];
+      const updatedAccounts = [
+        {
+          nim: trimmedNim,
+          name: updatedUser.name,
+          role: role,
+          prodi: 'S1 MATEMATIKA',
+          fakultas: 'Universitas Negeri Gorontalo',
+          angkatan: '2024',
+          lastLogin: new Date().toISOString(),
+          ktmImageUrl: '/assets/ktm_ismail.png'
+        },
+        ...accounts.filter((a: any) => a.nim !== trimmedNim)
+      ];
+      localStorage.setItem('siakad_device_logged_accounts', JSON.stringify(updatedAccounts));
+    } catch (e) {}
 
     // Force Class Gate Screen after login so the user enters class code with the updated NIM
     setCurrentClass(null);
@@ -444,6 +464,7 @@ export function App() {
           {currentPage === 'dashboard' && (
             <DashboardView
               user={currentUser}
+              currentClass={currentClass}
               schedules={schedules}
               tasks={tasks}
               onAddTask={handleAddTask}

@@ -6,7 +6,8 @@ import {
   DashboardTab, 
   TaskPriority,
   TaskCategory,
-  UserRole 
+  UserRole,
+  ClassInfo
 } from '../types';
 import { 
   GraduationCap, 
@@ -30,6 +31,11 @@ import {
   Check,
   Tag,
   Users,
+  School,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
   X
 } from 'lucide-react';
 import { TaskStats } from './TaskStats';
@@ -88,6 +94,7 @@ export const CategoryTag: React.FC<{ category?: TaskCategory | string; size?: 's
 
 interface DashboardViewProps {
   user: UserProfile;
+  currentClass?: ClassInfo | null;
   schedules: CourseSchedule[];
   tasks: TaskItem[];
   onAddTask: (task: Omit<TaskItem, 'id' | 'createdAt'>) => void;
@@ -102,6 +109,7 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   user,
+  currentClass,
   schedules,
   tasks,
   onAddTask,
@@ -404,51 +412,153 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 2.1 TAB SEMUA */}
       {activeTab === 'semua' && (
         <div className="space-y-4">
-          {/* 3 Productivity Stat Cards (Tugas Belum Selesai, Tugas Diselesaikan, Jadwal Kuliah Hari Ini) */}
-          <div className="space-y-3">
-            {/* Card 1: Tugas Belum Selesai */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-500">Tugas Belum Selesai</span>
-                <Clock className="w-4 h-4 text-red-600" />
+          {/* CARD-BASED GRID SYSTEM FOR SUMMARY WIDGETS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* WIDGET 1: Active Class Info Card */}
+            <div 
+              onClick={onOpenAnggota}
+              className="group relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 hover:border-red-300 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
+                    <School className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Firebase Live
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      Ruang Kelas Aktif
+                    </span>
+                    {currentClass?.nimRestriction?.enabled && (
+                      <span className="text-[9px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1 rounded">
+                        🔒 Filter NIM
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-extrabold text-gray-900 group-hover:text-red-700 transition-colors truncate mt-0.5">
+                    {currentClass?.name || 'Pendidikan Teknologi Informasi'}
+                  </h3>
+                  <p className="text-xs font-mono font-bold text-red-600 mt-0.5">
+                    Kode: {currentClass?.code || 'PTI-2024A'}
+                  </p>
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                    Ketua: {currentClass?.creatorName || user.name}
+                  </p>
+                </div>
               </div>
-              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
-                {tasks.filter((t) => !t.isCompleted).length}
-                <span className="text-sm font-normal text-gray-500 ml-1.5">tugas</span>
-              </p>
-              <p className="text-xs font-semibold text-red-600 mt-1.5">
-                Perlu segera diselesaikan
-              </p>
+
+              <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-xs text-red-600 font-bold">
+                <span className="text-[11px] flex items-center gap-1 text-gray-600 group-hover:text-red-600 transition-colors">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Lihat Anggota Kelas</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
 
-            {/* Card 2: Tugas Diselesaikan */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-500">Tugas Diselesaikan</span>
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
+            {/* WIDGET 2: Productivity Stats Card */}
+            <div 
+              onClick={() => setActiveTab('tugas')}
+              className="group relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 hover:border-emerald-300 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    {tasks.length > 0 ? Math.round((tasks.filter(t => t.isCompleted).length / tasks.length) * 100) : 0}% Selesai
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                    Ringkasan Tugas
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-2xl font-black text-gray-900">
+                      {tasks.filter(t => !t.isCompleted).length}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      belum selesai ({tasks.filter(t => t.isCompleted).length} selesai)
+                    </span>
+                  </div>
+
+                  {/* Mini Progress Bar */}
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden flex">
+                    <div 
+                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${tasks.length > 0 ? (tasks.filter(t => t.isCompleted).length / tasks.length) * 100 : 0}%` 
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
-                {tasks.filter((t) => t.isCompleted).length}
-                <span className="text-sm font-normal text-gray-500 ml-1.5">tugas</span>
-              </p>
-              <p className="text-xs font-semibold text-green-600 mt-1.5">
-                Sudah selesai dikerjakan
-              </p>
+
+              <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-700 font-bold">
+                <span className="text-[11px] text-gray-600 group-hover:text-emerald-700 transition-colors flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{schedules.length} Jadwal Kuliah Terdaftar</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
 
-            {/* Card 3: Jadwal Kuliah Hari Ini */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-500">Jadwal Kuliah Hari Ini</span>
-                <BookOpen className="w-4 h-4 text-blue-600" />
+            {/* WIDGET 3: Upcoming Tasks Summary Widget */}
+            <div 
+              onClick={() => setActiveTab('tugas')}
+              className="group relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 hover:border-amber-300 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                    Tenggat Terdekat
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                    Tugas Prioritas Utama
+                  </span>
+                  {tasks.filter(t => !t.isCompleted).length > 0 ? (
+                    (() => {
+                      const nearestTask = tasks.filter(t => !t.isCompleted)[0];
+                      return (
+                        <div className="mt-1">
+                          <h4 className="text-xs sm:text-sm font-bold text-gray-900 truncate group-hover:text-amber-700 transition-colors">
+                            {nearestTask.title}
+                          </h4>
+                          <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                            {nearestTask.courseName} • {nearestTask.dueDate} ({nearestTask.dueTime})
+                          </p>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <p className="text-xs text-gray-400 font-medium mt-1">
+                      Semua tugas telah diselesaikan!
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-baseline">
-                {schedules.filter((s) => s.dayOfWeek === 'Selasa').length || 1}
-                <span className="text-sm font-normal text-gray-500 ml-1.5">mata kuliah</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1.5">
-                Hari Selasa
-              </p>
+
+              <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-xs text-amber-700 font-bold">
+                <span className="text-[11px] text-gray-600 group-hover:text-amber-700 transition-colors flex items-center gap-1">
+                  <CalendarIcon className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Buka Semua Tugas</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
           </div>
 
@@ -810,7 +920,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className={`p-4 rounded-xl border transition-all duration-300 ${
                     t.isCompleted
                       ? 'bg-gray-50/70 border-gray-200 opacity-75'
-                      : 'bg-white border-gray-200 hover:border-red-200 hover:shadow-xs'
+                      : 'bg-white border-gray-200 hover:border-red-300 hover:shadow-xs hover:-translate-y-0.5'
                   } ${
                     justToggledId === t.id
                       ? t.isCompleted
