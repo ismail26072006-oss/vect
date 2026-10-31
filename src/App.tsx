@@ -25,6 +25,7 @@ import {
   syncUpdateTask,
   syncDeleteTask,
   syncToggleTask,
+  syncToggleTaskForUser,
   syncAddSchedule,
   syncDeleteSchedule,
   DEFAULT_CLASS_INFO,
@@ -49,13 +50,34 @@ export function App() {
   });
 
   const [schedules, setSchedules] = useState<CourseSchedule[]>(() => {
-    const saved = localStorage.getItem('siakad_schedules_v2');
-    return saved ? JSON.parse(saved) : initialSchedules;
+    try {
+      const saved = localStorage.getItem('siakad_schedules_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((s: CourseSchedule) => !s.id.startsWith('mk-') || s.id.length > 8);
+        }
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [tasks, setTasks] = useState<TaskItem[]>(() => {
-    const saved = localStorage.getItem('siakad_tasks_v2');
-    return saved ? JSON.parse(saved) : initialTasks;
+    try {
+      const saved = localStorage.getItem('siakad_tasks_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Remove old ghost tasks (e.g. task-1, task-2, UI/UX Portal)
+          return parsed.filter((t: TaskItem) => 
+            !['task-1', 'task-2', 'task-3', 'task-4', 'task-5', 'task-6'].includes(t.id) &&
+            !t.title.includes('UI/UX Portal') &&
+            !t.title.includes('Query SQL')
+          );
+        }
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -101,13 +123,23 @@ export function App() {
   useEffect(() => {
     if (!isLoggedIn || !currentClass?.code) return;
 
-    // Real-time listener for tasks
+    // Real-time listener for tasks: Maps per-student completion status
+    const studentNim = currentUser.nim;
     const unsubscribeTasks = subscribeToClassTasks(
       currentClass.code,
       (updatedTasks) => {
-        setTasks(updatedTasks);
+        const mapped = updatedTasks.map((t) => {
+          const isDone = Array.isArray(t.completedByNims)
+            ? t.completedByNims.includes(studentNim)
+            : false;
+          return {
+            ...t,
+            isCompleted: isDone
+          };
+        });
+        setTasks(mapped);
       },
-      tasks
+      []
     );
 
     // Real-time listener for schedules
@@ -116,14 +148,14 @@ export function App() {
       (updatedSchedules) => {
         setSchedules(updatedSchedules);
       },
-      schedules
+      []
     );
 
     return () => {
       unsubscribeTasks();
       unsubscribeSchedules();
     };
-  }, [isLoggedIn, currentClass?.code]);
+  }, [isLoggedIn, currentClass?.code, currentUser.nim]);
 
   // Notification Scheduling System: checks task due dates and triggers notifications for tasks due within <= 1 hour
   useEffect(() => {
@@ -281,14 +313,8 @@ export function App() {
     // 2. Class content isolation:
     // If it's a newly created custom class, start with completely EMPTY schedules & tasks!
     if (classInfo.code !== currentClass?.code) {
-      if (classInfo.code === 'PTI-2024A') {
-        setSchedules(initialSchedules);
-        setTasks(initialTasks);
-      } else {
-        // Newly created class starts completely empty
-        setSchedules([]);
-        setTasks([]);
-      }
+      setSchedules([]);
+      setTasks([]);
     }
 
     setCurrentClass(classInfo);
@@ -328,6 +354,9 @@ export function App() {
       ...newTask,
       id: 'task-' + Date.now(),
       createdAt: new Date().toISOString(),
+      createdBy: currentUser.nim,
+      completedByNims: [],
+      isCompleted: false,
     };
     // Optimistic local update
     setTasks((prev) => [item, ...prev]);
@@ -358,21 +387,36 @@ export function App() {
     }
   };
 
+  /**
+   * Per-Student Task Completion:
+   * When a student checks a task, only their personal NIM is toggled in completedByNims.
+   * Other students' checkboxes remain unaffected!
+   */
   const handleToggleTask = async (id: string) => {
+    const studentNim = currentUser.nim;
     let nextStatus = false;
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === id) {
-          nextStatus = !t.isCompleted;
-          return { ...t, isCompleted: nextStatus };
+          const currentList = Array.isArray(t.completedByNims) ? t.completedByNims : [];
+          const isDone = currentList.includes(studentNim);
+          nextStatus = !isDone;
+          const updatedList = nextStatus
+            ? Array.from(new Set([...currentList, studentNim]))
+            : currentList.filter((n) => n !== studentNim);
+          return {
+            ...t,
+            completedByNims: updatedList,
+            isCompleted: nextStatus
+          };
         }
         return t;
       })
     );
 
-    // Firestore sync
+    // Firestore sync per-student: adds/removes ONLY this student's NIM from completedByNims
     if (currentClass?.code) {
-      await syncToggleTask(currentClass.code, id, nextStatus);
+      await syncToggleTaskForUser(currentClass.code, id, studentNim, nextStatus);
     }
   };
 

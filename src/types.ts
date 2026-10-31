@@ -74,6 +74,8 @@ export interface TaskItem {
   isCompleted: boolean;
   isClassTask: boolean;
   createdAt: string;
+  createdBy?: string;
+  completedByNims?: string[];
 }
 
 export type DashboardTab = 'semua' | 'jadwal' | 'tugas' | 'kalender';

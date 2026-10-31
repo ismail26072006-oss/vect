@@ -110,41 +110,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <p className="text-gray-400 text-[11px] truncate">{user.prodi}</p>
             </div>
 
-            {/* Switch Role Option */}
-            <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
-                Simulasi Hak Akses
-              </p>
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => {
-                    onRoleChange('KETUA_KELAS');
-                    setShowDropdown(false);
-                  }}
-                  className={`flex-1 py-1 px-2 rounded text-[11px] font-medium flex items-center justify-center gap-1 ${
-                    user.role === 'KETUA_KELAS'
-                      ? 'bg-red-600 text-white font-bold'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {user.role === 'KETUA_KELAS' && <Check className="w-3 h-3" />}
-                  Ketua Kelas
-                </button>
-                <button
-                  onClick={() => {
-                    onRoleChange('MAHASISWA');
-                    setShowDropdown(false);
-                  }}
-                  className={`flex-1 py-1 px-2 rounded text-[11px] font-medium flex items-center justify-center gap-1 ${
-                    user.role === 'MAHASISWA'
-                      ? 'bg-red-600 text-white font-bold'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {user.role === 'MAHASISWA' && <Check className="w-3 h-3" />}
-                  Mahasiswa
-                </button>
-              </div>
+            {/* Hak Akses Status (Tetap sesuai akun login) */}
+            <div className="px-4 py-2.5 bg-gray-50/70 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-[11px] text-gray-500 font-medium">Status Hak Akses:</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                user.role === 'KETUA_KELAS'
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                  : 'bg-blue-100 text-blue-900 border border-blue-300'
+              }`}>
+                {user.role === 'KETUA_KELAS' ? '👑 Ketua Kelas' : '🎓 Mahasiswa'}
+              </span>
             </div>
 
             <div className="py-1">

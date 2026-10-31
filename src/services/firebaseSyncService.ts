@@ -176,37 +176,28 @@ export function subscribeToClassTasks(
         if (!snapshot.empty) {
           const list: TaskItem[] = [];
           snapshot.forEach((docSnap) => {
-            list.push({ ...docSnap.data(), id: docSnap.id } as TaskItem);
+            const data = docSnap.data();
+            list.push({ 
+              ...data, 
+              id: docSnap.id,
+              completedByNims: Array.isArray(data.completedByNims) ? data.completedByNims : []
+            } as TaskItem);
           });
           onTasksUpdated(list);
         } else {
-          // Only seed initial sample data for the default demo class PTI-2024A
-          if (code === DEFAULT_CLASS_CODE) {
-            seedDefaultClassTasks(code, fallbackTasks);
-            onTasksUpdated(fallbackTasks);
-          } else {
-            // Newly created classes start completely empty
-            onTasksUpdated([]);
-          }
+          // Empty class has 0 tasks - no ghost tasks
+          onTasksUpdated([]);
         }
       },
       (error) => {
         console.warn('Real-time tasks onSnapshot error:', error);
-        if (code === DEFAULT_CLASS_CODE) {
-          onTasksUpdated(fallbackTasks);
-        } else {
-          onTasksUpdated([]);
-        }
+        onTasksUpdated([]);
       }
     );
     return unsubscribe;
   } catch (err) {
     console.warn('Failed to attach tasks snapshot listener:', err);
-    if (code === DEFAULT_CLASS_CODE) {
-      onTasksUpdated(fallbackTasks);
-    } else {
-      onTasksUpdated([]);
-    }
+    onTasksUpdated([]);
     return () => {};
   }
 }
@@ -233,62 +224,20 @@ export function subscribeToClassSchedules(
           });
           onSchedulesUpdated(list);
         } else {
-          // Only seed initial sample data for the default demo class PTI-2024A
-          if (code === DEFAULT_CLASS_CODE) {
-            seedDefaultClassSchedules(code, fallbackSchedules);
-            onSchedulesUpdated(fallbackSchedules);
-          } else {
-            // Newly created classes start completely empty
-            onSchedulesUpdated([]);
-          }
+          // Empty class has 0 schedules - no ghost schedules
+          onSchedulesUpdated([]);
         }
       },
       (error) => {
         console.warn('Real-time schedules onSnapshot error:', error);
-        if (code === DEFAULT_CLASS_CODE) {
-          onSchedulesUpdated(fallbackSchedules);
-        } else {
-          onSchedulesUpdated([]);
-        }
+        onSchedulesUpdated([]);
       }
     );
     return unsubscribe;
   } catch (err) {
     console.warn('Failed to attach schedules snapshot listener:', err);
-    if (code === DEFAULT_CLASS_CODE) {
-      onSchedulesUpdated(fallbackSchedules);
-    } else {
-      onSchedulesUpdated([]);
-    }
+    onSchedulesUpdated([]);
     return () => {};
-  }
-}
-
-/**
- * Seed default tasks into Firestore class subcollection
- */
-async function seedDefaultClassTasks(classCode: string, tasks: TaskItem[]) {
-  try {
-    for (const t of tasks) {
-      const docRef = doc(db, 'classes', classCode, 'tasks', t.id);
-      await setDoc(docRef, t, { merge: true });
-    }
-  } catch (e) {
-    // ignore offline seed error
-  }
-}
-
-/**
- * Seed default schedules into Firestore class subcollection
- */
-async function seedDefaultClassSchedules(classCode: string, schedules: CourseSchedule[]) {
-  try {
-    for (const s of schedules) {
-      const docRef = doc(db, 'classes', classCode, 'schedules', s.id);
-      await setDoc(docRef, s, { merge: true });
-    }
-  } catch (e) {
-    // ignore offline seed error
   }
 }
 
@@ -299,7 +248,10 @@ export async function syncAddTask(classCode: string, task: TaskItem) {
   const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
   try {
     const docRef = doc(db, 'classes', code, 'tasks', task.id);
-    await setDoc(docRef, task);
+    await setDoc(docRef, {
+      ...task,
+      completedByNims: Array.isArray(task.completedByNims) ? task.completedByNims : []
+    });
   } catch (e) {
     console.warn('Firestore addTask sync error:', e);
   }
@@ -325,7 +277,39 @@ export async function syncDeleteTask(classCode: string, taskId: string) {
   }
 }
 
+/**
+ * Per-student task completion sync:
+ * Adds or removes ONLY the specific student's NIM from completedByNims in Firestore.
+ * Does NOT mark the task completed for all other students!
+ */
+export async function syncToggleTaskForUser(
+  classCode: string,
+  taskId: string,
+  userNim: string,
+  isDone: boolean
+) {
+  const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
+  const cleanNim = (userNim || '').trim();
+  if (!cleanNim) return;
+
+  try {
+    const docRef = doc(db, 'classes', code, 'tasks', taskId);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const currentList: string[] = Array.isArray(data.completedByNims) ? data.completedByNims : [];
+      const updatedList = isDone
+        ? Array.from(new Set([...currentList, cleanNim]))
+        : currentList.filter((n) => n !== cleanNim);
+      await updateDoc(docRef, { completedByNims: updatedList });
+    }
+  } catch (e) {
+    console.warn('Firestore syncToggleTaskForUser error:', e);
+  }
+}
+
 export async function syncToggleTask(classCode: string, taskId: string, isCompleted: boolean) {
+  // Legacy fallback
   const code = classCode.trim().toUpperCase() || DEFAULT_CLASS_CODE;
   try {
     const docRef = doc(db, 'classes', code, 'tasks', taskId);

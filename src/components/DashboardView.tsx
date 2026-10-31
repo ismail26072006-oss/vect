@@ -338,7 +338,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="grid grid-cols-4 gap-1 p-1 bg-black/25 rounded-xl text-xs font-semibold">
           {[
             { id: 'semua' as DashboardTab, label: 'Semua' },
-            { id: 'jadwal' as DashboardTab, label: 'Jadwal MK' },
+            { id: 'jadwal' as DashboardTab, label: 'Jadwal' },
             { id: 'tugas' as DashboardTab, label: 'Tugas' },
             { id: 'kalender' as DashboardTab, label: 'Kalender' },
           ].map((tab) => {
@@ -662,6 +662,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             {t.title}
                           </h4>
                           <CategoryTag category={t.category || 'Study'} />
+                          {user.role === 'KETUA_KELAS' && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-0.5">
+                              <Users className="w-2.5 h-2.5 text-indigo-600" />
+                              <span>{t.completedByNims?.length || 0} Selesai</span>
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs mt-1">
                           <span className="text-red-600 font-medium">{t.courseName}</span>
@@ -709,7 +715,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors self-start sm:self-auto"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ Tambah Jadwal MK</span>
+                <span>+ Tambah Jadwal</span>
               </button>
             )}
           </div>
@@ -951,6 +957,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         {t.isClassTask && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                             <span>📢 Tugas Kelas</span>
+                          </span>
+                        )}
+                        {user.role === 'KETUA_KELAS' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1" title={`${t.completedByNims?.length || 0} mahasiswa telah menyelesaikan tugas ini`}>
+                            <Users className="w-3 h-3 text-indigo-600" />
+                            <span>{t.completedByNims?.length || 0} Mahasiswa Selesai</span>
                           </span>
                         )}
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
